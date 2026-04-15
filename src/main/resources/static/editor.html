@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docify — Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0c0c0f; --surface: #141418; --surface2: #1a1a20; --surface3: #202028;
+    --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
+    --text: #eeece6; --muted: #7a7870; --accent: #7c6af7; --accent2: #a594ff;
+    --green: #3fba8c; --amber: #f0a340; --red: #e05a5a; --blue: #4a9eff; --pink: #d46f9e;
+    --paper: #18181e;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text);
+    height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* TOPBAR */
+  .topbar { display: flex; align-items: center; padding: 0 16px; height: 52px;
+    background: var(--surface); border-bottom: 0.5px solid var(--border); gap: 12px; flex-shrink: 0; }
+  .logo-icon { width: 28px; height: 28px; background: var(--accent); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif; font-size: 14px; color: white;
+    font-style: italic; cursor: pointer; flex-shrink: 0; }
+  .doc-title { font-size: 15px; font-weight: 500; color: var(--text); border: none;
+    background: transparent; outline: none; font-family: 'DM Sans', sans-serif;
+    max-width: 280px; flex: 1; }
+  .doc-title:focus { background: var(--surface2); border-radius: 4px; padding: 2px 6px; }
+  .save-status { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .topbar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+  .collab-avatars { display: flex; }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--surface);
+    font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    margin-left: -6px; cursor: pointer; transition: transform 0.15s; flex-shrink: 0; }
+  .avatar:first-child { margin-left: 0; }
+  .avatar:hover { transform: scale(1.15); z-index: 10; }
+  .tbtn-top { display: flex; align-items: center; gap: 6px; padding: 6px 12px;
+    border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: all 0.15s; font-family: 'DM Sans', sans-serif;
+    border: 0.5px solid var(--border2); background: var(--surface2); color: var(--text); }
+  .tbtn-top:hover { background: var(--surface3); }
+  .tbtn-top.primary { background: var(--accent); color: white; border-color: transparent; }
+  .tbtn-top.primary:hover { background: var(--accent2); }
+  .tbtn-top svg { width: 13px; height: 13px; }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; align-items: center; padding: 0 12px; height: 38px;
+    background: var(--surface); border-bottom: 0.5px solid var(--border);
+    gap: 2px; flex-shrink: 0; overflow-x: auto; }
+  .toolbar::-webkit-scrollbar { display: none; }
+  .tbtn { width: 28px; height: 28px; border-radius: 5px; border: none;
+    background: transparent; color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; transition: all 0.1s; flex-shrink: 0;
+    font-family: 'DM Sans', sans-serif; }
+  .tbtn:hover { background: var(--surface3); color: var(--text); }
+  .tbtn.active { background: rgba(124,106,247,0.15); color: var(--accent2); }
+  .tbtn svg { width: 13px; height: 13px; }
+  .tdiv { width: 0.5px; height: 18px; background: var(--border2); margin: 0 4px; flex-shrink: 0; }
+  .tsel { padding: 3px 6px; border-radius: 5px; border: 0.5px solid var(--border);
+    background: var(--surface2); color: var(--text); font-size: 12px;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; outline: none; height: 26px; }
+
+  /* MAIN */
+  .main { display: flex; flex: 1; overflow: hidden; }
+
+  /* TABS SIDEBAR */
+  .tabs-panel { width: 200px; background: var(--surface); border-right: 0.5px solid var(--border);
+    display: flex; flex-direction: column; flex-shrink: 0; }
+  .tabs-panel-header { padding: 12px 14px 8px; font-size: 10px; font-weight: 600;
+    letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase;
+    display: flex; align-items: center; justify-content: space-between; }
+  .add-tab-btn { width: 20px; height: 20px; border-radius: 4px; border: none;
+    background: transparent; color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+    transition: all 0.1s; }
+  .add-tab-btn:hover { background: var(--surface2); color: var(--accent2); }
+  .tab-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+  .tab-item { display: flex; align-items: center; padding: 8px 14px; cursor: pointer;
+    font-size: 13px; color: var(--muted); transition: all 0.1s;
+    border-left: 2px solid transparent; gap: 8px; }
+  .tab-item:hover { background: var(--surface2); color: var(--text); }
+  .tab-item.active { background: rgba(124,106,247,0.08); color: var(--accent2);
+    border-left-color: var(--accent); }
+  .tab-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tab-del { width: 16px; height: 16px; border-radius: 3px; border: none;
+    background: transparent; color: transparent; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 10px;
+    transition: all 0.1s; }
+  .tab-item:hover .tab-del { color: var(--muted); }
+  .tab-item:hover .tab-del:hover { color: var(--red); background: rgba(224,90,90,0.1); }
+
+  /* EDITOR */
+  .editor-wrap { flex: 1; overflow-y: auto; background: #101014;
+    display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+  .editor-wrap::-webkit-scrollbar { width: 4px; }
+  .editor-wrap::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  .page { width: 100%; max-width: 720px; background: var(--paper);
+    border: 0.5px solid rgba(255,255,255,0.05); border-radius: 3px;
+    padding: 72px 80px; min-height: 900px; position: relative; }
+  .editor { outline: none; font-family: 'DM Serif Display', serif; font-size: 16px;
+    line-height: 1.9; color: #ccc9c0; min-height: 600px; }
+  .editor:empty::before { content: 'Start writing...'; color: var(--muted);
+    font-style: italic; pointer-events: none; }
+  .editor h1 { font-size: 30px; font-weight: 400; color: var(--text); margin-bottom: 8px; line-height: 1.3; }
+  .editor h2 { font-size: 20px; font-weight: 400; color: #d8d6d0; margin: 24px 0 8px;
+    border-bottom: 0.5px solid var(--border); padding-bottom: 6px; }
+  .editor h3 { font-size: 17px; font-weight: 500; color: #d0cec8; margin: 18px 0 6px;
+    font-family: 'DM Sans', sans-serif; }
+  .editor p { margin-bottom: 12px; }
+  .editor ul, .editor ol { padding-left: 24px; margin-bottom: 12px; }
+  .editor li { margin-bottom: 4px; }
+  .editor blockquote { border-left: 3px solid var(--accent); padding-left: 16px;
+    color: var(--muted); font-style: italic; margin: 16px 0; }
+  .editor code { font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 3px; color: var(--accent2); }
+  .editor table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  .editor td, .editor th { border: 0.5px solid var(--border2); padding: 8px 12px; font-size: 14px; }
+  .editor th { background: var(--surface2); font-weight: 600; }
+
+  /* RIGHT PANEL */
+  .right-panel { width: 250px; background: var(--surface); border-left: 0.5px solid var(--border);
+    display: flex; flex-direction: column; flex-shrink: 0; }
+  .panel-tabs { display: flex; border-bottom: 0.5px solid var(--border); }
+  .ptab { flex: 1; padding: 10px 0; text-align: center; font-size: 12px; font-weight: 500;
+    color: var(--muted); cursor: pointer; transition: all 0.15s;
+    border-bottom: 2px solid transparent; }
+  .ptab.active { color: var(--accent2); border-bottom-color: var(--accent); }
+  .panel-body { flex: 1; overflow-y: auto; padding: 12px; }
+  .panel-body::-webkit-scrollbar { width: 3px; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* VERSION ITEMS */
+  .ver-item { display: flex; gap: 8px; padding: 8px; border-radius: 7px;
+    cursor: pointer; transition: background 0.1s; margin-bottom: 4px; }
+  .ver-item:hover { background: var(--surface2); }
+  .ver-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .ver-time { font-size: 12px; font-weight: 500; }
+  .ver-author { font-size: 11px; color: var(--muted); }
+  .restore-btn { font-size: 11px; padding: 3px 8px; border-radius: 4px;
+    border: 0.5px solid var(--border2); background: transparent; color: var(--muted);
+    cursor: pointer; margin-top: 4px; }
+  .restore-btn:hover { color: var(--accent2); border-color: var(--accent); }
+
+  /* SHARE MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 100; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 0.5px solid var(--border2);
+    border-radius: 14px; padding: 24px; width: 420px; }
+  .modal h3 { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 16px; }
+  .share-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .share-row input { flex: 1; background: var(--surface2); border: 0.5px solid var(--border2);
+    border-radius: 7px; padding: 8px 12px; color: var(--text); font-size: 13px;
+    font-family: 'DM Sans', sans-serif; outline: none; }
+  .share-row select { background: var(--surface2); border: 0.5px solid var(--border2);
+    border-radius: 7px; padding: 8px 10px; color: var(--text); font-size: 13px;
+    font-family: 'DM Sans', sans-serif; outline: none; cursor: pointer; }
+  .share-row button { padding: 8px 14px; background: var(--accent); border: none;
+    border-radius: 7px; color: white; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .perm-list { margin-top: 8px; }
+  .perm-item { display: flex; align-items: center; gap: 10px; padding: 8px;
+    background: var(--surface2); border-radius: 7px; margin-bottom: 6px; }
+  .perm-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex-shrink: 0; }
+  .perm-info { flex: 1; }
+  .perm-name { font-size: 12px; font-weight: 500; }
+  .perm-email { font-size: 11px; color: var(--muted); }
+  .perm-role { font-size: 11px; padding: 2px 7px; border-radius: 4px; }
+  .link-section { margin-top: 14px; padding-top: 14px; border-top: 0.5px solid var(--border); }
+  .link-label { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; margin-bottom: 8px; }
+  .link-row-inner { display: flex; gap: 8px; }
+  .link-row-inner input { flex: 1; background: var(--surface2); border: 0.5px solid var(--border);
+    border-radius: 6px; padding: 6px 10px; color: var(--muted); font-size: 11px;
+    font-family: 'JetBrains Mono', monospace; outline: none; }
+  .copy-btn { padding: 6px 12px; background: var(--surface3); border: 0.5px solid var(--border2);
+    border-radius: 6px; color: var(--text); font-size: 12px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; }
+  .gen-link-btn { padding: 7px 14px; background: transparent; border: 0.5px solid var(--border2);
+    border-radius: 6px; color: var(--muted); font-size: 12px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s; margin-right: 8px; }
+  .gen-link-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.25); }
+  .modal-footer { display: flex; justify-content: flex-end; margin-top: 16px; }
+  .close-btn { padding: 8px 16px; background: var(--surface2); border: 0.5px solid var(--border2);
+    border-radius: 7px; color: var(--text); font-size: 13px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; }
+
+  /* STATUS */
+  .statusbar { height: 24px; background: var(--surface); border-top: 0.5px solid var(--border);
+    display: flex; align-items: center; padding: 0 16px; gap: 20px; flex-shrink: 0; }
+  .status-item { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+  .ws-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .ws-dot.off { background: var(--red); }
+
+  /* RENAME INPUT */
+  .rename-input { background: var(--surface2); border: 0.5px solid var(--accent);
+    border-radius: 4px; padding: 2px 6px; color: var(--text); font-size: 13px;
+    font-family: 'DM Sans', sans-serif; outline: none; width: 140px; }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-icon" onclick="window.location.href='/dashboard'">D</div>
+  <input class="doc-title" id="docTitle" value="Loading..." onblur="saveTitle()" onkeydown="if(event.key==='Enter')this.blur()" />
+  <div class="save-status">
+    <div class="save-dot" id="saveDot"></div>
+    <span id="saveText">Saved</span>
+  </div>
+  <div class="topbar-right">
+    <div class="collab-avatars" id="collabAvatars"></div>
+    <button class="tbtn-top" onclick="openShare()">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 3a2 2 0 100-4 2 2 0 000 4zM4 9a2 2 0 100-4 2 2 0 000 4zM10 15a2 2 0 100-4 2 2 0 000 4z"/><path d="M5.7 6.5l2.6-1.5M5.7 8l2.6 1.5"/></svg>
+      Share
+    </button>
+    <button class="tbtn-top" onclick="window.location.href='/dashboard'">← Dashboard</button>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <select class="tsel" id="formatBlock" onchange="format('formatBlock',this.value)" style="width:100px">
+    <option value="p">Normal</option>
+    <option value="h1">Heading 1</option>
+    <option value="h2">Heading 2</option>
+    <option value="h3">Heading 3</option>
+    <option value="blockquote">Quote</option>
+  </select>
+  <div class="tdiv"></div>
+  <button class="tbtn" onclick="format('bold')" title="Bold"><b>B</b></button>
+  <button class="tbtn" onclick="format('italic')" title="Italic"><i>I</i></button>
+  <button class="tbtn" onclick="format('underline')" title="Underline"><u>U</u></button>
+  <button class="tbtn" onclick="format('strikeThrough')" title="Strikethrough" style="text-decoration:line-through">S</button>
+  <div class="tdiv"></div>
+  <button class="tbtn" onclick="format('justifyLeft')" title="Align left">
+    <svg viewBox="0 0 13 13" fill="currentColor"><rect x="1" y="1" width="11" height="1.5" rx=".75"/><rect x="1" y="4.5" width="7" height="1.5" rx=".75"/><rect x="1" y="8" width="11" height="1.5" rx=".75"/><rect x="1" y="11" width="5" height="1.5" rx=".75"/></svg>
+  </button>
+  <button class="tbtn" onclick="format('justifyCenter')" title="Center">
+    <svg viewBox="0 0 13 13" fill="currentColor"><rect x="1" y="1" width="11" height="1.5" rx=".75"/><rect x="3" y="4.5" width="7" height="1.5" rx=".75"/><rect x="1" y="8" width="11" height="1.5" rx=".75"/><rect x="4" y="11" width="5" height="1.5" rx=".75"/></svg>
+  </button>
+  <button class="tbtn" onclick="format('justifyRight')" title="Align right">
+    <svg viewBox="0 0 13 13" fill="currentColor"><rect x="1" y="1" width="11" height="1.5" rx=".75"/><rect x="5" y="4.5" width="7" height="1.5" rx=".75"/><rect x="1" y="8" width="11" height="1.5" rx=".75"/><rect x="7" y="11" width="5" height="1.5" rx=".75"/></svg>
+  </button>
+  <div class="tdiv"></div>
+  <button class="tbtn" onclick="format('insertUnorderedList')" title="Bullet list">
+    <svg viewBox="0 0 13 13" fill="currentColor"><circle cx="2" cy="3" r="1.2"/><rect x="5" y="2.25" width="7" height="1.5" rx=".75"/><circle cx="2" cy="6.5" r="1.2"/><rect x="5" y="5.75" width="7" height="1.5" rx=".75"/><circle cx="2" cy="10" r="1.2"/><rect x="5" y="9.25" width="7" height="1.5" rx=".75"/></svg>
+  </button>
+  <button class="tbtn" onclick="format('insertOrderedList')" title="Numbered list">
+    <svg viewBox="0 0 13 13" fill="currentColor"><text x="1" y="5" font-size="4.5" fill="currentColor">1.</text><rect x="5" y="2.5" width="7" height="1.5" rx=".75"/><text x="1" y="9.5" font-size="4.5" fill="currentColor">2.</text><rect x="5" y="7" width="7" height="1.5" rx=".75"/></svg>
+  </button>
+  <div class="tdiv"></div>
+  <button class="tbtn" onclick="insertTable()" title="Insert table">
+    <svg viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1" y="1" width="11" height="11" rx="1"/><path d="M1 4.5h11M6.5 1v11"/></svg>
+  </button>
+  <button class="tbtn" onclick="format('insertHorizontalRule')" title="Divider">—</button>
+  <div class="tdiv"></div>
+  <select class="tsel" id="fontColor" onchange="format('foreColor',this.value)" style="width:34px;padding:0;text-align:center">
+    <option value="#eeece6">⬜</option>
+    <option value="#a594ff">🟣</option>
+    <option value="#3fba8c">🟢</option>
+    <option value="#f0a340">🟡</option>
+    <option value="#e05a5a">🔴</option>
+    <option value="#4a9eff">🔵</option>
+  </select>
+  <div class="tdiv"></div>
+  <button class="tbtn" onclick="document.getElementById('versionPanel').style.display='block'" style="width:auto;padding:0 8px;font-size:11px;color:var(--accent2)">
+    History
+  </button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- TABS PANEL -->
+  <div class="tabs-panel">
+    <div class="tabs-panel-header">
+      Tabs
+      <button class="add-tab-btn" onclick="addTab()" title="Add tab">+</button>
+    </div>
+    <div class="tab-list" id="tabList"></div>
+  </div>
+
+  <!-- EDITOR -->
+  <div class="editor-wrap">
+    <div class="page">
+      <div class="editor" id="editor" contenteditable="true"
+           oninput="onEditorInput()" onkeyup="sendCursor()"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="panel-tabs">
+      <div class="ptab active" onclick="switchPanel(this,'versions')">History</div>
+      <div class="ptab" onclick="switchPanel(this,'activity')">Activity</div>
+    </div>
+    <div class="panel-body" id="panel-versions">
+      <div style="font-size:12px;color:var(--muted);padding:8px 0">Auto-saves appear here</div>
+    </div>
+    <div class="panel-body" id="panel-activity" style="display:none">
+      <div id="activityFeed" style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)">
+        <div>Waiting for activity...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="status-item"><div class="ws-dot" id="wsDot"></div><span id="wsText">Connecting...</span></div>
+  <div class="status-item" id="wordCount">Words: 0</div>
+  <div class="status-item" id="cursorPos">Line 1, Col 1</div>
+</div>
+
+<!-- SHARE MODAL -->
+<div class="modal-overlay" id="shareModal" onclick="if(event.target===this)closeShare()">
+  <div class="modal">
+    <h3>Share document</h3>
+    <div class="share-row">
+      <input type="email" id="shareEmail" placeholder="Email address..." />
+      <select id="shareRole"><option value="EDIT">Editor</option><option value="VIEW">Viewer</option></select>
+      <button onclick="shareWithUser()">Invite</button>
+    </div>
+    <div class="perm-list" id="permList"></div>
+    <div class="link-section">
+      <div class="link-label">Anyone with the link</div>
+      <div style="display:flex;align-items:center;margin-bottom:8px">
+        <button class="gen-link-btn" onclick="genLink('VIEW')">View link</button>
+        <button class="gen-link-btn" onclick="genLink('EDIT')">Edit link</button>
+      </div>
+      <div class="link-row-inner" id="linkRow" style="display:none">
+        <input type="text" id="linkInput" readonly />
+        <button class="copy-btn" onclick="copyLink()">Copy</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="close-btn" onclick="closeShare()">Done</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── State ─────────────────────────────────────────────────────
+  const docId = window.location.pathname.split('/').pop();
+  let currentTabId = null;
+  let tabs = [];
+  let saveTimer = null;
+  let stompClient = null;
+  let isRemoteUpdate = false;
+  let userId = null;
+  let userName = '';
+
+  // ── Init ──────────────────────────────────────────────────────
+  async function init() {
+    const me = await fetch('/api/auth/me').then(r => r.json());
+    if (me.error) { window.location.href = '/login'; return; }
+    userId = me.id; userName = me.name;
+
+    const doc = await fetch('/api/documents/' + docId).then(r => r.json());
+    document.getElementById('docTitle').value = doc.title;
+    document.title = doc.title + ' — Docify';
+
+    await loadTabs();
+    connectWS();
+  }
+
+  // ── Tabs ──────────────────────────────────────────────────────
+  async function loadTabs() {
+    tabs = await fetch('/api/documents/' + docId + '/tabs').then(r => r.json());
+    renderTabs();
+    if (tabs.length > 0) selectTab(tabs[0].id);
+  }
+
+  function renderTabs() {
+    const list = document.getElementById('tabList');
+    list.innerHTML = tabs.map(t => `
+      <div class="tab-item ${t.id === currentTabId ? 'active' : ''}"
+           id="tab-${t.id}" onclick="selectTab(${t.id})">
+        <span class="tab-name" ondblclick="startRename(${t.id}, this)">${t.name}</span>
+        <button class="tab-del" onclick="event.stopPropagation();deleteTab(${t.id})" title="Delete tab">×</button>
+      </div>
+    `).join('');
+  }
+
+  function selectTab(tabId) {
+    if (currentTabId === tabId) return;
+    if (currentTabId) saveCurrentTab(true);
+    currentTabId = tabId;
+    const tab = tabs.find(t => t.id === tabId);
+    document.getElementById('editor').innerHTML = tab ? (tab.content || '') : '';
+    renderTabs();
+    subscribeToTab(tabId);
+    loadVersions(tabId);
+    updateWordCount();
+  }
+
+  async function addTab() {
+    const name = prompt('Tab name:', 'New Tab');
+    if (!name) return;
+    const tab = await fetch('/api/documents/' + docId + '/tabs', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name })
+    }).then(r => r.json());
+    tabs.push(tab);
+    renderTabs();
+    selectTab(tab.id);
+    broadcastTabEvent('added', tab.name);
+  }
+
+  async function deleteTab(tabId) {
+    if (tabs.length <= 1) { alert('Cannot delete the only tab.'); return; }
+    if (!confirm('Delete this tab?')) return;
+    await fetch('/api/documents/' + docId + '/tabs/' + tabId, { method: 'DELETE' });
+    tabs = tabs.filter(t => t.id !== tabId);
+    if (currentTabId === tabId) {
+      currentTabId = null;
+      selectTab(tabs[0].id);
+    }
+    renderTabs();
+  }
+
+  function startRename(tabId, el) {
+    const current = el.textContent;
+    const input = document.createElement('input');
+    input.className = 'rename-input';
+    input.value = current;
+    el.replaceWith(input);
+    input.focus(); input.select();
+    const finish = async () => {
+      const newName = input.value.trim() || current;
+      await fetch('/api/documents/' + docId + '/tabs/' + tabId + '/rename', {
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName })
+      });
+      tabs = tabs.map(t => t.id === tabId ? { ...t, name: newName } : t);
+      renderTabs();
+    };
+    input.onblur = finish;
+    input.onkeydown = e => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') { input.value = current; input.blur(); } };
+  }
+
+  // ── Editor ────────────────────────────────────────────────────
+  function onEditorInput() {
+    if (isRemoteUpdate) return;
+    updateWordCount();
+    setSaveStatus('saving');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveCurrentTab, 2000);
+    if (stompClient && stompClient.connected) {
+      stompClient.send('/app/edit/' + currentTabId, {}, JSON.stringify({
+        content: document.getElementById('editor').innerHTML,
+        userId, userName
+      }));
+    }
+  }
+
+  async function saveCurrentTab(silent = false) {
+    if (!currentTabId) return;
+    const content = document.getElementById('editor').innerHTML;
+    await fetch('/api/documents/' + docId + '/tabs/' + currentTabId + '/content', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content })
+    });
+    tabs = tabs.map(t => t.id === currentTabId ? { ...t, content } : t);
+    if (!silent) setSaveStatus('saved');
+  }
+
+  function setSaveStatus(state) {
+    const dot = document.getElementById('saveDot');
+    const txt = document.getElementById('saveText');
+    if (state === 'saving') { dot.style.background = 'var(--amber)'; txt.textContent = 'Saving...'; }
+    else { dot.style.background = 'var(--green)'; txt.textContent = 'Saved'; }
+  }
+
+  function format(cmd, val = null) {
+    document.getElementById('editor').focus();
+    document.execCommand(cmd, false, val);
+  }
+
+  function insertTable() {
+    const html = '<table><tr><th>Header 1</th><th>Header 2</th></tr><tr><td>Cell</td><td>Cell</td></tr></table><p><br></p>';
+    document.execCommand('insertHTML', false, html);
+  }
+
+  function updateWordCount() {
+    const text = document.getElementById('editor').innerText || '';
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    document.getElementById('wordCount').textContent = 'Words: ' + words;
+  }
+
+  function sendCursor() {
+    if (!stompClient || !stompClient.connected) return;
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    stompClient.send('/app/cursor/' + currentTabId, {}, JSON.stringify({ userId, userName }));
+  }
+
+  // ── Title ─────────────────────────────────────────────────────
+  async function saveTitle() {
+    const title = document.getElementById('docTitle').value.trim() || 'Untitled document';
+    await fetch('/api/documents/' + docId + '/title', {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title })
+    });
+    document.title = title + ' — Docify';
+  }
+
+  // ── WebSocket ─────────────────────────────────────────────────
+  function connectWS() {
+    const socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+    stompClient.debug = null;
+    stompClient.connect({}, () => {
+      document.getElementById('wsDot').classList.remove('off');
+      document.getElementById('wsText').textContent = 'Connected';
+      subscribeToTabEvents();
+      if (currentTabId) subscribeToTab(currentTabId);
+    }, () => {
+      document.getElementById('wsDot').classList.add('off');
+      document.getElementById('wsText').textContent = 'Disconnected';
+      setTimeout(connectWS, 3000);
+    });
+  }
+
+  function subscribeToTab(tabId) {
+    if (!stompClient || !stompClient.connected) return;
+    stompClient.subscribe('/topic/tab/' + tabId, msg => {
+      const data = JSON.parse(msg.body);
+      if (data.userId === userId) return;
+      isRemoteUpdate = true;
+      const editor = document.getElementById('editor');
+      if (editor.innerHTML !== data.content) {
+        const sel = window.getSelection();
+        editor.innerHTML = data.content;
+      }
+      isRemoteUpdate = false;
+      addActivity(data.userName + ' is editing...');
+    });
+  }
+
+  function subscribeToTabEvents() {
+    stompClient.subscribe('/topic/tabs/' + docId, msg => {
+      const data = JSON.parse(msg.body);
+      addActivity(data.userName + ' ' + data.event + ' tab "' + data.tabName + '"');
+    });
+  }
+
+  function broadcastTabEvent(event, tabName) {
+    if (!stompClient || !stompClient.connected) return;
+    stompClient.send('/app/tab-event/' + docId, {}, JSON.stringify({ event, tabName, userId, userName }));
+  }
+
+  function addActivity(msg) {
+    const feed = document.getElementById('activityFeed');
+    const item = document.createElement('div');
+    item.style.cssText = 'padding:6px;background:var(--surface2);border-radius:6px;animation:fadeIn 0.3s';
+    item.textContent = msg;
+    feed.prepend(item);
+    if (feed.children.length > 20) feed.lastChild.remove();
+  }
+
+  // ── Versions ──────────────────────────────────────────────────
+  async function loadVersions(tabId) {
+    const versions = await fetch('/api/versions/tab/' + tabId).then(r => r.json());
+    const panel = document.getElementById('panel-versions');
+    if (!versions.length) {
+      panel.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">No versions yet. Auto-saves after edits.</div>';
+      return;
+    }
+    const colors = ['#7c6af7','#3fba8c','#4a9eff','#f0a340','#d46f9e'];
+    panel.innerHTML = versions.map((v, i) => `
+      <div class="ver-item">
+        <div class="ver-dot" style="background:${colors[i % colors.length]}"></div>
+        <div style="flex:1">
+          <div class="ver-time">${v.versionName || timeAgo(v.savedAt)}</div>
+          <div class="ver-author">${v.savedBy}</div>
+          <button class="restore-btn" onclick="restoreVersion(${v.id})">Restore</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function restoreVersion(versionId) {
+    if (!confirm('Restore this version? Current content will be saved first.')) return;
+    const tab = await fetch('/api/versions/' + versionId + '/restore', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }
+    }).then(r => r.json());
+    document.getElementById('editor').innerHTML = tab.content || '';
+    tabs = tabs.map(t => t.id === currentTabId ? { ...t, content: tab.content } : t);
+    setSaveStatus('saved');
+    loadVersions(currentTabId);
+  }
+
+  // ── Share ─────────────────────────────────────────────────────
+  async function openShare() {
+    document.getElementById('shareModal').classList.add('open');
+    await loadPermissions();
+  }
+  function closeShare() { document.getElementById('shareModal').classList.remove('open'); }
+
+  async function loadPermissions() {
+    const perms = await fetch('/api/share/' + docId + '/permissions').then(r => r.json());
+    const list = document.getElementById('permList');
+    if (!perms.length) { list.innerHTML = '<div style="font-size:12px;color:var(--muted)">No one else has access yet.</div>'; return; }
+    list.innerHTML = perms.map(p => `
+      <div class="perm-item">
+        <div class="perm-avatar">${p.userName.charAt(0).toUpperCase()}</div>
+        <div class="perm-info">
+          <div class="perm-name">${p.userName}</div>
+          <div class="perm-email">${p.userEmail}</div>
+        </div>
+        <span class="perm-role" style="background:${p.role==='EDIT'?'rgba(63,186,140,0.15)':'rgba(74,158,255,0.15)'};color:${p.role==='EDIT'?'var(--green)':'var(--blue)'}">${p.role}</span>
+        <button onclick="revokeAccess(${p.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px" title="Remove">×</button>
+      </div>
+    `).join('');
+  }
+
+  async function shareWithUser() {
+    const email = document.getElementById('shareEmail').value.trim();
+    const role = document.getElementById('shareRole').value;
+    if (!email) return;
+    const res = await fetch('/api/share/' + docId + '/user', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, role })
+    });
+    const data = await res.json();
+    if (res.ok) { document.getElementById('shareEmail').value = ''; loadPermissions(); }
+    else alert(data.error || 'Failed to share');
+  }
+
+  async function genLink(role) {
+    const data = await fetch('/api/share/' + docId + '/link', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role })
+    }).then(r => r.json());
+    const linkRow = document.getElementById('linkRow');
+    document.getElementById('linkInput').value = window.location.origin + data.url;
+    linkRow.style.display = 'flex';
+  }
+
+  function copyLink() {
+    const input = document.getElementById('linkInput');
+    input.select();
+    document.execCommand('copy');
+    const btn = event.target;
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  }
+
+  async function revokeAccess(permId) {
+    await fetch('/api/share/permission/' + permId, { method: 'DELETE' });
+    loadPermissions();
+  }
+
+  // ── Utils ─────────────────────────────────────────────────────
+  function switchPanel(el, panel) {
+    document.querySelectorAll('.ptab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('panel-versions').style.display = panel === 'versions' ? 'block' : 'none';
+    document.getElementById('panel-activity').style.display = panel === 'activity' ? 'block' : 'none';
+  }
+
+  function timeAgo(ts) {
+    if (!ts) return 'Unknown time';
+    const diff = (Date.now() - new Date(ts)) / 1000;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  }
+
+  window.addEventListener('beforeunload', () => saveCurrentTab(true));
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveCurrentTab(); }
+  });
+
+  init();
+</script>
+</body>
+</html>

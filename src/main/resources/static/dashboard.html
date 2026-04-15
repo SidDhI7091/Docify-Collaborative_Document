@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docify — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0c0c0f; --surface: #141418; --surface2: #1a1a20; --surface3: #202028;
+    --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
+    --text: #eeece6; --muted: #7a7870; --accent: #7c6af7; --accent2: #a594ff;
+    --green: #3fba8c; --red: #e05a5a; --amber: #f0a340;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  /* NAV */
+  nav { display: flex; align-items: center; padding: 0 28px; height: 56px;
+    background: var(--surface); border-bottom: 0.5px solid var(--border); gap: 16px; }
+  .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; margin-right: auto; }
+  .logo-icon { width: 30px; height: 30px; background: var(--accent); border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif; font-size: 15px; color: white; font-style: italic; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 18px; font-style: italic; color: var(--text); }
+  .search-bar { display: flex; align-items: center; gap: 8px;
+    background: var(--surface2); border: 0.5px solid var(--border2);
+    border-radius: 8px; padding: 0 12px; height: 34px; width: 260px; }
+  .search-bar input { background: none; border: none; outline: none; color: var(--text);
+    font-size: 13px; font-family: 'DM Sans', sans-serif; width: 100%; }
+  .search-bar svg { color: var(--muted); flex-shrink: 0; }
+  .avatar-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--accent);
+    border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: white; }
+  .logout-btn { padding: 6px 14px; background: transparent; border: 0.5px solid var(--border2);
+    border-radius: 7px; color: var(--muted); font-size: 13px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+  .logout-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.25); }
+  /* MAIN */
+  .main { max-width: 1100px; margin: 0 auto; padding: 40px 28px; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .section-title { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; }
+  .new-btn { display: flex; align-items: center; gap: 7px; padding: 8px 16px;
+    background: var(--accent); border: none; border-radius: 8px; color: white;
+    font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s; }
+  .new-btn:hover { background: var(--accent2); transform: translateY(-1px); }
+  .new-btn svg { width: 14px; height: 14px; }
+  /* DOC GRID */
+  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 48px; }
+  .doc-card { background: var(--surface); border: 0.5px solid var(--border2);
+    border-radius: 12px; overflow: hidden; cursor: pointer;
+    transition: all 0.2s; position: relative; }
+  .doc-card:hover { border-color: rgba(124,106,247,0.5); transform: translateY(-2px); }
+  .doc-thumb { height: 130px; background: var(--surface2);
+    display: flex; align-items: center; justify-content: center;
+    border-bottom: 0.5px solid var(--border); position: relative; overflow: hidden; }
+  .doc-thumb-lines { padding: 16px; width: 100%; }
+  .thumb-line { height: 8px; background: var(--surface3); border-radius: 2px; margin-bottom: 7px; }
+  .thumb-line:nth-child(1) { width: 70%; }
+  .thumb-line:nth-child(2) { width: 90%; }
+  .thumb-line:nth-child(3) { width: 60%; }
+  .thumb-line:nth-child(4) { width: 80%; }
+  .doc-info { padding: 14px; }
+  .doc-name { font-size: 13px; font-weight: 500; margin-bottom: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .doc-meta { font-size: 11px; color: var(--muted); }
+  .doc-menu { position: absolute; top: 8px; right: 8px; opacity: 0; transition: opacity 0.15s; }
+  .doc-card:hover .doc-menu { opacity: 1; }
+  .doc-menu button { width: 28px; height: 28px; border-radius: 6px;
+    background: var(--surface); border: 0.5px solid var(--border2);
+    color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .doc-menu button:hover { color: var(--red); }
+  /* EMPTY */
+  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
+  .empty p { font-size: 14px; }
+  /* SHARED BADGE */
+  .shared-badge { position: absolute; top: 8px; left: 8px; background: rgba(63,186,140,0.15);
+    border: 0.5px solid rgba(63,186,140,0.3); color: var(--green);
+    font-size: 9px; font-weight: 700; letter-spacing: 0.06em; padding: 2px 7px;
+    border-radius: 4px; text-transform: uppercase; }
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); z-index: 100;
+    align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 0.5px solid var(--border2);
+    border-radius: 14px; padding: 28px; width: 360px; }
+  .modal h3 { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 16px; }
+  .modal input { width: 100%; background: var(--surface2); border: 0.5px solid var(--border2);
+    border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: 14px;
+    font-family: 'DM Sans', sans-serif; outline: none; margin-bottom: 14px; }
+  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
+  .btn-ghost { padding: 8px 16px; background: transparent; border: 0.5px solid var(--border2);
+    border-radius: 7px; color: var(--muted); font-size: 13px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; }
+  .btn-solid { padding: 8px 16px; background: var(--accent); border: none;
+    border-radius: 7px; color: white; font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; }
+  .greeting { font-size: 13px; color: var(--muted); }
+  .greeting strong { color: var(--text); }
+</style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="/dashboard">
+    <div class="logo-icon">D</div>
+    <span class="logo-text">Docify</span>
+  </a>
+  <div class="search-bar">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="4.5"/><path d="M10 10l2.5 2.5"/></svg>
+    <input id="searchInput" placeholder="Search documents..." oninput="filterDocs()" />
+  </div>
+  <span class="greeting">Hello, <strong id="userName">...</strong></span>
+  <button class="logout-btn" onclick="logout()">Sign out</button>
+</nav>
+
+<div class="main">
+  <div class="section-header">
+    <h2 class="section-title">My documents</h2>
+    <button class="new-btn" onclick="openNewModal()">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 1v12M1 7h12"/></svg>
+      New document
+    </button>
+  </div>
+  <div class="doc-grid" id="ownedGrid">
+    <div class="empty"><div class="empty-icon">📄</div><p>No documents yet. Create your first one!</p></div>
+  </div>
+
+  <div class="section-header">
+    <h2 class="section-title">Shared with me</h2>
+  </div>
+  <div class="doc-grid" id="sharedGrid">
+    <div class="empty"><div class="empty-icon">👥</div><p>No shared documents yet.</p></div>
+  </div>
+</div>
+
+<!-- New doc modal -->
+<div class="modal-overlay" id="newModal" onclick="if(event.target===this)closeNewModal()">
+  <div class="modal">
+    <h3>New document</h3>
+    <input type="text" id="newTitle" placeholder="Document title..." value="Untitled document" />
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeNewModal()">Cancel</button>
+      <button class="btn-solid" onclick="createDoc()">Create</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allOwned = [], allShared = [];
+
+  async function init() {
+    const me = await fetch('/api/auth/me').then(r => r.json());
+    if (me.error) { window.location.href = '/login'; return; }
+    document.getElementById('userName').textContent = me.name;
+    loadDocs();
+  }
+
+  async function loadDocs() {
+    const data = await fetch('/api/documents').then(r => r.json());
+    allOwned = data.owned || [];
+    allShared = data.shared || [];
+    renderDocs(allOwned, allShared);
+  }
+
+  function renderDocs(owned, shared) {
+    renderGrid('ownedGrid', owned, false);
+    renderGrid('sharedGrid', shared, true);
+  }
+
+  function renderGrid(id, docs, isShared) {
+    const grid = document.getElementById(id);
+    if (!docs.length) {
+      grid.innerHTML = `<div class="empty"><div class="empty-icon">${isShared ? '👥' : '📄'}</div><p>${isShared ? 'No shared documents yet.' : 'No documents yet. Create your first one!'}</p></div>`;
+      return;
+    }
+    grid.innerHTML = docs.map(d => `
+      <div class="doc-card" onclick="openDoc(${d.id})">
+        <div class="doc-thumb">
+          ${isShared ? '<span class="shared-badge">Shared</span>' : ''}
+          <div class="doc-thumb-lines">
+            <div class="thumb-line"></div><div class="thumb-line"></div>
+            <div class="thumb-line"></div><div class="thumb-line"></div>
+          </div>
+          ${!isShared ? `<div class="doc-menu"><button onclick="event.stopPropagation();deleteDoc(${d.id})" title="Delete">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h8M5 3V2h2v1M4 3v6h4V3"/></svg>
+          </button></div>` : ''}
+        </div>
+        <div class="doc-info">
+          <div class="doc-name">${d.title}</div>
+          <div class="doc-meta">${isShared ? 'by ' + d.ownerName + ' · ' : ''}${timeAgo(d.updatedAt)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function filterDocs() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    renderDocs(
+      allOwned.filter(d => d.title.toLowerCase().includes(q)),
+      allShared.filter(d => d.title.toLowerCase().includes(q))
+    );
+  }
+
+  function openDoc(id) { window.location.href = '/editor/' + id; }
+
+  async function createDoc() {
+    const title = document.getElementById('newTitle').value.trim() || 'Untitled document';
+    const res = await fetch('/api/documents', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title })
+    });
+    const doc = await res.json();
+    closeNewModal();
+    window.location.href = '/editor/' + doc.id;
+  }
+
+  async function deleteDoc(id) {
+    if (!confirm('Delete this document? This cannot be undone.')) return;
+    await fetch('/api/documents/' + id, { method: 'DELETE' });
+    loadDocs();
+  }
+
+  async function logout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
+  }
+
+  function openNewModal() {
+    document.getElementById('newModal').classList.add('open');
+    setTimeout(() => document.getElementById('newTitle').focus(), 100);
+  }
+  function closeNewModal() { document.getElementById('newModal').classList.remove('open'); }
+
+  function timeAgo(ts) {
+    if (!ts) return '';
+    const diff = (Date.now() - new Date(ts)) / 1000;
+    if (diff < 60) return 'just now';
+    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+    return Math.floor(diff/86400) + 'd ago';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('newModal').classList.contains('open')) createDoc();
+  });
+
+  init();
+</script>
+</body>
+</html>

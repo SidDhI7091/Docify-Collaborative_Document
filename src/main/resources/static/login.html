@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docify — Sign in</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0c0c0f; --surface: #141418; --surface2: #1a1a20;
+    --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.13);
+    --text: #eeece6; --muted: #7a7870; --accent: #7c6af7; --accent2: #a594ff;
+    --green: #3fba8c; --red: #e05a5a;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    padding: 24px; }
+  .container { width: 100%; max-width: 420px; }
+  .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 40px; justify-content: center; }
+  .logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 9px;
+    display: flex; align-items: center; justify-content: center; font-family: 'DM Serif Display', serif;
+    font-size: 18px; color: white; font-style: italic; }
+  .logo-text { font-family: 'DM Serif Display', serif; font-size: 22px; font-style: italic; }
+  .card { background: var(--surface); border: 0.5px solid var(--border2); border-radius: 16px; padding: 36px; }
+  h1 { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; margin-bottom: 6px; }
+  .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
+  .field { margin-bottom: 16px; }
+  label { display: block; font-size: 12px; font-weight: 500; color: var(--muted);
+    letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 7px; }
+  input { width: 100%; background: var(--surface2); border: 0.5px solid var(--border2);
+    border-radius: 8px; padding: 11px 14px; color: var(--text); font-size: 14px;
+    font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.15s; }
+  input:focus { border-color: var(--accent); }
+  .btn { width: 100%; padding: 12px; background: var(--accent); border: none;
+    border-radius: 8px; color: white; font-size: 14px; font-weight: 600;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s;
+    margin-top: 8px; }
+  .btn:hover { background: var(--accent2); transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0;
+    font-size: 12px; color: var(--muted); }
+  .divider::before, .divider::after { content: ''; flex: 1;
+    height: 0.5px; background: var(--border2); }
+  .link-row { text-align: center; font-size: 13px; color: var(--muted); margin-top: 20px; }
+  .link-row a { color: var(--accent2); text-decoration: none; }
+  .link-row a:hover { text-decoration: underline; }
+  .error { background: rgba(224,90,90,0.1); border: 0.5px solid rgba(224,90,90,0.3);
+    border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--red);
+    margin-bottom: 16px; display: none; }
+  .error.show { display: block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="logo">
+    <div class="logo-icon">D</div>
+    <span class="logo-text">Docify</span>
+  </div>
+  <div class="card">
+    <h1>Welcome back</h1>
+    <p class="subtitle">Sign in to continue to your documents</p>
+    <div class="error" id="error"></div>
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="you@example.com" />
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••" />
+    </div>
+    <button class="btn" id="loginBtn" onclick="login()">Sign in</button>
+    <div class="divider">or</div>
+    <div class="link-row">Don't have an account? <a href="/register">Create one</a></div>
+  </div>
+</div>
+<script>
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+  async function login() {
+    const btn = document.getElementById('loginBtn');
+    const err = document.getElementById('error');
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    if (!email || !password) { showError('Please fill in all fields'); return; }
+    btn.disabled = true; btn.textContent = 'Signing in...';
+    err.classList.remove('show');
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (res.ok) { window.location.href = '/dashboard'; }
+      else { showError(data.error || 'Invalid credentials'); }
+    } catch (e) { showError('Connection error. Try again.'); }
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+  function showError(msg) {
+    const err = document.getElementById('error');
+    err.textContent = msg; err.classList.add('show');
+  }
+</script>
+</body>
+</html>

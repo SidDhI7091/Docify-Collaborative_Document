@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Docify — Shared document</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg:#0c0c0f;--surface:#141418;--border:rgba(255,255,255,0.1);--text:#eeece6;--muted:#7a7870;--accent:#7c6af7; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  nav { display:flex;align-items:center;padding:0 24px;height:52px;background:var(--surface);border-bottom:0.5px solid var(--border);gap:10px; }
+  .logo-icon { width:28px;height:28px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:14px;color:white;font-style:italic; }
+  .logo-text { font-family:'DM Serif Display',serif;font-size:17px;font-style:italic; }
+  .badge { font-size:10px;padding:2px 8px;border-radius:4px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;margin-left:8px; }
+  .view-badge { background:rgba(74,158,255,0.15);color:#4a9eff; }
+  .edit-badge { background:rgba(63,186,140,0.15);color:#3fba8c; }
+  .doc-title { font-size:15px;font-weight:500;margin-left:8px; }
+  .tabs { display:flex;gap:0;padding:0 16px;background:var(--surface);border-bottom:0.5px solid var(--border);overflow-x:auto; }
+  .tab { padding:10px 16px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap; }
+  .tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+  .editor-wrap { display:flex;justify-content:center;padding:40px 24px;min-height:calc(100vh - 100px);background:#101014; }
+  .page { width:100%;max-width:720px;background:#18181e;border:0.5px solid rgba(255,255,255,0.05);border-radius:3px;padding:72px 80px;min-height:900px; }
+  .content { font-family:'DM Serif Display',serif;font-size:16px;line-height:1.9;color:#ccc9c0; }
+  .content h1 { font-size:30px;font-weight:400;color:var(--text);margin-bottom:8px; }
+  .content h2 { font-size:20px;font-weight:400;color:#d8d6d0;margin:24px 0 8px;border-bottom:0.5px solid var(--border);padding-bottom:6px; }
+  .error { text-align:center;padding:80px 20px;color:var(--muted); }
+  .error h2 { font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:8px; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo-icon">D</div>
+  <span class="logo-text">Docify</span>
+  <span id="roleBadge" class="badge view-badge">View only</span>
+  <span class="doc-title" id="navTitle"></span>
+</nav>
+<div class="tabs" id="tabsBar"></div>
+<div class="editor-wrap">
+  <div class="page">
+    <div class="content" id="content">
+      <div style="color:var(--muted);font-style:italic">Loading document...</div>
+    </div>
+  </div>
+</div>
+<div id="errorDiv" class="error" style="display:none">
+  <h2>Link invalid or expired</h2>
+  <p>This share link is no longer active.</p>
+</div>
+
+<script>
+  const token = window.location.pathname.split('/').pop();
+
+  async function init() {
+    const info = await fetch('/api/share/view/' + token).then(r => r.json());
+    if (info.error) {
+      document.querySelector('.editor-wrap').style.display = 'none';
+      document.getElementById('errorDiv').style.display = 'block';
+      return;
+    }
+    const docId = info.documentId;
+    const role = info.role;
+    document.getElementById('roleBadge').textContent = role === 'EDIT' ? 'Can edit' : 'View only';
+    document.getElementById('roleBadge').className = 'badge ' + (role === 'EDIT' ? 'edit-badge' : 'view-badge');
+
+    const doc = await fetch('/api/documents/' + docId).then(r => r.json()).catch(() => null);
+    if (doc && doc.title) document.getElementById('navTitle').textContent = doc.title;
+
+    const tabs = await fetch('/api/documents/' + docId + '/tabs').then(r => r.json());
+    if (!tabs.length) return;
+
+    const bar = document.getElementById('tabsBar');
+    bar.innerHTML = tabs.map((t, i) => `<div class="tab ${i===0?'active':''}" onclick="showTab(this,${i},'${encodeURIComponent(t.content||'')}')">${t.name}</div>`).join('');
+    document.getElementById('content').innerHTML = tabs[0].content || '<em style="color:var(--muted)">This tab is empty.</em>';
+
+    if (role === 'EDIT') {
+      window.location.href = '/editor/' + docId;
+    }
+  }
+
+  function showTab(el, idx, encodedContent) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('content').innerHTML = decodeURIComponent(encodedContent) || '<em style="color:var(--muted)">This tab is empty.</em>';
+  }
+
+  init();
+</script>
+</body>
+</html>
