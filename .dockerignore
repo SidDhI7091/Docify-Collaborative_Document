@@ -1,0 +1,12 @@
+# Keep Docker build context lean
+target/
+.git/
+.github/
+.idea/
+.vscode/
+*.md
+*.log
+docker-compose*.yml
+k8s/
+sonar-project.properties
+checkstyle.xml

@@ -159,8 +159,9 @@
 
   async function loadDocs() {
     const data = await fetch('/api/documents').then(r => r.json());
-    allOwned = data.owned || [];
-    allShared = data.shared || [];
+    // CORRECT — match what DocumentController actually returns
+allOwned = data.myDocuments || [];
+allShared = data.sharedDocuments || [];
     renderDocs(allOwned, allShared);
   }
 

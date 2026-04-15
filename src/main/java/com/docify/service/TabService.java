@@ -36,21 +36,43 @@ public class TabService {
         return tabRepository.save(tab);
     }
 
+    // @Transactional
+    // public DocumentTab saveContent(Long tabId, String content, Long userId) {
+    //     DocumentTab tab = tabRepository.findById(tabId)
+    //         .orElseThrow(() -> new RuntimeException("Tab not found"));
+    //     // save version snapshot
+    //     User user = userRepository.findById(userId)
+    //         .orElseThrow(() -> new RuntimeException("User not found"));
+    //     DocumentVersion version = DocumentVersion.builder()
+    //         .document(tab.getDocument()).tab(tab)
+    //         .savedBy(user).content(tab.getContent())
+    //         .build();
+    //     versionRepository.save(version);
+    //     tab.setContent(content);
+    //     return tabRepository.save(tab);
+    // }
+
+
     @Transactional
-    public DocumentTab saveContent(Long tabId, String content, Long userId) {
-        DocumentTab tab = tabRepository.findById(tabId)
-            .orElseThrow(() -> new RuntimeException("Tab not found"));
-        // save version snapshot
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("User not found"));
+public DocumentTab saveContent(Long tabId, String content, Long userId) {
+    DocumentTab tab = tabRepository.findById(tabId)
+        .orElseThrow(() -> new RuntimeException("Tab not found"));
+    User user = userRepository.findById(userId)
+        .orElseThrow(() -> new RuntimeException("User not found"));
+
+    // Only snapshot if there's something worth saving
+    if (tab.getContent() != null && !tab.getContent().isBlank()) {
         DocumentVersion version = DocumentVersion.builder()
             .document(tab.getDocument()).tab(tab)
             .savedBy(user).content(tab.getContent())
+            .versionName("Auto-save")   // ← add this
             .build();
         versionRepository.save(version);
-        tab.setContent(content);
-        return tabRepository.save(tab);
     }
+
+    tab.setContent(content);
+    return tabRepository.save(tab);
+}
 
     @Transactional
     public void deleteTab(Long tabId) {

@@ -1,6 +1,6 @@
 // AuthService.java
 package com.docify.service;
-
+// import com.docify.service.AuthService;
 import com.docify.model.User;
 import com.docify.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +14,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
 
     public User register(String name, String email, String password) {
-        if (userRepository.existsByEmail(email))
+        if (userRepository.findByEmail(email).isPresent())
             throw new RuntimeException("Email already registered");
         User user = User.builder()
             .name(name).email(email)
@@ -23,8 +23,14 @@ public class AuthService {
         return userRepository.save(user);
     }
 
-    public Optional<User> login(String email, String password) {
-        return userRepository.findByEmail(email)
-            .filter(u -> passwordEncoder.matches(password, u.getPassword()));
-    }
+    // public Optional<User> login(String email, String password) {
+    //     return userRepository.findByEmail(email)
+    //         .filter(u -> passwordEncoder.matches(password, u.getPassword()));
+    // }
+
+    public User login(String email, String password) {
+    return userRepository.findByEmail(email)
+        .filter(u -> passwordEncoder.matches(password, u.getPassword()))
+        .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+}
 }
