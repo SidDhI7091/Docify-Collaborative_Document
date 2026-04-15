@@ -282,3 +282,5 @@ The app exposes Spring Actuator endpoints:
 | Tech Stack | Spring Boot · PostgreSQL · WebSocket · Docker · GitHub Actions · SonarCloud |
 | Live Staging URL | https://docify-staging.onrender.com |
 | Repository | https://github.com/YOUR_USERNAME/docify |
+#   t r i g g e r   C I  
+ 
