@@ -353,8 +353,8 @@ jobs:
       - name: 🐳 Build Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./demo
-          file: ./demo/Dockerfile
+          context: .
+          file: ./Dockerfile
           push: false
 
   # ──────────────────────────────────────────────────────────────────
