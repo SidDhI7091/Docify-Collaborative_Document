@@ -350,15 +350,12 @@ jobs:
             type=sha,prefix=sha-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: 🐳 Build and Push Docker Image
+      - name: 🐳 Build Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          context: ./demo
+          file: ./demo/Dockerfile
+          push: false
 
   # ──────────────────────────────────────────────────────────────────
   # JOB 4: Deploy to Staging (Render)
