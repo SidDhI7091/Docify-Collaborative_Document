@@ -17,11 +17,18 @@ public class Document {
 
     private String title;
 
+    /** Card colour displayed on the dashboard (e.g. "#f87c7c"). */
+    @Column(name = "color")
+    private String color;
+
+    /** ISO-8601 datetime string for the deadline reminder. */
+    @Column(name = "deadline")
+    private String deadline;
+
     @Column(name = "created_at") private LocalDateTime createdAt;
     @Column(name = "updated_at") private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "document", cascade = CascadeType.ALL, orphanRemoval = true)
-
     @OrderBy("position ASC")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

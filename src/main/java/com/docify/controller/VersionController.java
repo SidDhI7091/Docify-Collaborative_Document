@@ -29,7 +29,16 @@ public class VersionController {
                                       HttpSession session) {
         Long userId = (Long) session.getAttribute("userId");
         if (userId == null) return ResponseEntity.status(401).build();
-        return ResponseEntity.ok(versionService.restoreVersion(versionId, userId));
+        try {
+            Map<String, Object> result = versionService.restoreVersion(versionId, userId);
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            String msg = e.getMessage();
+            if (msg == null && e.getCause() != null) msg = e.getCause().getMessage();
+            if (msg == null) msg = e.getClass().getSimpleName();
+            return ResponseEntity.status(500).body(Map.of("error", msg));
+        }
     }
 
     @PutMapping("/{versionId}/name")

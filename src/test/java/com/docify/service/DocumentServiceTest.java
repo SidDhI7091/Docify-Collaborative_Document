@@ -5,6 +5,7 @@ import com.docify.model.DocumentPermission;
 import com.docify.model.User;
 import com.docify.repository.DocumentPermissionRepository;
 import com.docify.repository.DocumentRepository;
+import com.docify.repository.DocumentTabRepository;
 import com.docify.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,26 +22,18 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-/**
- * Unit tests for DocumentService.
- * Uses Mockito to isolate service logic from the database layer.
- */
 @ExtendWith(MockitoExtension.class)
 class DocumentServiceTest {
 
-    @Mock
-    private DocumentRepository documentRepository;
-
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private DocumentPermissionRepository permissionRepository;
+    @Mock private DocumentRepository         documentRepository;
+    @Mock private UserRepository             userRepository;
+    @Mock private DocumentPermissionRepository permissionRepository;
+    @Mock private DocumentTabRepository      tabRepository;
 
     @InjectMocks
     private DocumentService documentService;
 
-    private User testUser;
+    private User     testUser;
     private Document testDocument;
 
     @BeforeEach
@@ -88,7 +81,7 @@ class DocumentServiceTest {
     @Test
     @DisplayName("getDocument: should return document by id")
     void getDocument_found() {
-        when(documentRepository.findById(10L)).thenReturn(Optional.of(testDocument));
+        when(documentRepository.findByIdWithOwner(10L)).thenReturn(Optional.of(testDocument));
 
         Document result = documentService.getDocument(10L);
 
@@ -99,7 +92,7 @@ class DocumentServiceTest {
     @Test
     @DisplayName("getDocument: should throw if document does not exist")
     void getDocument_notFound_throws() {
-        when(documentRepository.findById(999L)).thenReturn(Optional.empty());
+        when(documentRepository.findByIdWithOwner(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> documentService.getDocument(999L))
             .isInstanceOf(RuntimeException.class);
@@ -110,9 +103,9 @@ class DocumentServiceTest {
     @Test
     @DisplayName("canAccess: owner should always have access")
     void canAccess_owner_returnsTrue() {
-        when(documentRepository.findById(10L)).thenReturn(Optional.of(testDocument));
+        when(documentRepository.findByIdWithOwner(10L)).thenReturn(Optional.of(testDocument));
 
-        boolean result = documentService.canAccess(10L, 1L); // user 1 is the owner
+        boolean result = documentService.canAccess(10L, 1L);
 
         assertThat(result).isTrue();
     }
@@ -127,7 +120,7 @@ class DocumentServiceTest {
         perm.setDocument(testDocument);
         perm.setUser(otherUser);
 
-        when(documentRepository.findById(10L)).thenReturn(Optional.of(testDocument));
+        when(documentRepository.findByIdWithOwner(10L)).thenReturn(Optional.of(testDocument));
         when(permissionRepository.findByDocumentIdAndUserId(10L, 2L))
             .thenReturn(Optional.of(perm));
 
@@ -139,7 +132,7 @@ class DocumentServiceTest {
     @Test
     @DisplayName("canAccess: random user without permission should be denied")
     void canAccess_unauthorized_returnsFalse() {
-        when(documentRepository.findById(10L)).thenReturn(Optional.of(testDocument));
+        when(documentRepository.findByIdWithOwner(10L)).thenReturn(Optional.of(testDocument));
         when(permissionRepository.findByDocumentIdAndUserId(10L, 99L))
             .thenReturn(Optional.empty());
 
@@ -153,7 +146,8 @@ class DocumentServiceTest {
     @Test
     @DisplayName("getMyDocuments: should return documents owned by user")
     void getMyDocuments_returnsList() {
-        when(documentRepository.findByOwnerId(1L)).thenReturn(List.of(testDocument));
+        when(documentRepository.findByOwnerIdOrderByUpdatedAtDesc(1L))
+            .thenReturn(List.of(testDocument));
 
         List<Document> docs = documentService.getMyDocuments(1L);
 
@@ -161,27 +155,16 @@ class DocumentServiceTest {
         assertThat(docs.get(0).getTitle()).isEqualTo("Test Document");
     }
 
-    // ── renameDocument ────────────────────────────────────────────────
+    // ── updateTitle ───────────────────────────────────────────────────
 
     @Test
-    @DisplayName("renameDocument: owner can rename their document")
-    void renameDocument_owner_success() {
-        when(documentRepository.findById(10L)).thenReturn(Optional.of(testDocument));
+    @DisplayName("updateTitle: should update and return document with new title")
+    void updateTitle_success() {
+        when(documentRepository.findByIdWithOwner(10L)).thenReturn(Optional.of(testDocument));
         when(documentRepository.save(any(Document.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Document result = documentService.renameDocument(10L, 1L, "New Title");
+        Document result = documentService.updateTitle(10L, "New Title");
 
         assertThat(result.getTitle()).isEqualTo("New Title");
-    }
-
-    @Test
-    @DisplayName("renameDocument: non-owner cannot rename document")
-    void renameDocument_nonOwner_throws() {
-        when(documentRepository.findById(10L)).thenReturn(Optional.of(testDocument));
-
-        assertThatThrownBy(() -> documentService.renameDocument(10L, 99L, "Hacked Title"))
-            .isInstanceOf(RuntimeException.class);
-
-        verify(documentRepository, never()).save(any());
     }
 }

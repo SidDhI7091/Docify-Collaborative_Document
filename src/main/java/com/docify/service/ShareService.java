@@ -68,18 +68,24 @@ public class ShareService {
         });
     }
 
+    @Transactional(readOnly = true)
     public boolean canEdit(Long docId, Long userId) {
-        Document doc = documentRepository.findById(docId).orElse(null);
-        if (doc == null) return false;
+        Optional<Document> docOpt = documentRepository.findByIdWithOwner(docId);
+        if (docOpt.isEmpty()) return false;
+        Document doc = docOpt.get();
+        // Owner always has edit access
         if (doc.getOwner().getId().equals(userId)) return true;
+        // Check if user has EDIT permission
         return permissionRepository.findByDocumentIdAndUserId(docId, userId)
-            .map(p -> p.getPermissionType().equals("EDIT"))
+            .map(p -> "EDIT".equals(p.getPermissionType()))
             .orElse(false);
     }
 
+    @Transactional(readOnly = true)
     public boolean canView(Long docId, Long userId) {
-        Document doc = documentRepository.findById(docId).orElse(null);
-        if (doc == null) return false;
+        Optional<Document> docOpt = documentRepository.findByIdWithOwner(docId);
+        if (docOpt.isEmpty()) return false;
+        Document doc = docOpt.get();
         if (doc.getOwner().getId().equals(userId)) return true;
         return permissionRepository.existsByDocumentIdAndUserId(docId, userId);
     }

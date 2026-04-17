@@ -37,4 +37,10 @@ public class PageController {
     public String shareView(@PathVariable String token) {
         return "forward:/shared-view.html";
     }
+
+    @GetMapping("/tasks")
+    public String tasksPage(HttpSession session) {
+        if (session.getAttribute("userId") == null) return "redirect:/login";
+        return "forward:/tasks.html";
+    }
 }

@@ -43,6 +43,16 @@ public class ShareController {
         ));
     }
 
+    @GetMapping("/{docId}/my-permission")
+    public ResponseEntity<?> myPermission(@PathVariable Long docId, HttpSession session) {
+        Long userId = (Long) session.getAttribute("userId");
+        if (userId == null) return ResponseEntity.status(401).build();
+        boolean edit = shareService.canEdit(docId, userId);
+        boolean view = edit || shareService.canView(docId, userId);
+        String role = edit ? "EDIT" : (view ? "VIEW" : "NONE");
+        return ResponseEntity.ok(Map.of("role", role, "canEdit", edit));
+    }
+
     @GetMapping("/{docId}/permissions")
     public ResponseEntity<?> getPermissions(@PathVariable Long docId,
                                              HttpSession session) {
@@ -51,6 +61,7 @@ public class ShareController {
         return ResponseEntity.ok(shareService.getPermissionsForDoc(docId)
             .stream().map(p -> Map.of(
                 "id", p.getId(),
+                "userId", p.getUser().getId(),
                 "userName", p.getUser().getName(),
                 "userEmail", p.getUser().getEmail(),
                 "role", p.getPermissionType()
