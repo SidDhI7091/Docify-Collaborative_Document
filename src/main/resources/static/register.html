@@ -24,13 +24,23 @@
   .card { background: var(--surface); border: 0.5px solid var(--border2); border-radius: 16px; padding: 36px; }
   h1 { font-family: 'DM Serif Display', serif; font-size: 26px; font-weight: 400; margin-bottom: 6px; }
   .subtitle { font-size: 14px; color: var(--muted); margin-bottom: 28px; }
-  .field { margin-bottom: 16px; }
+  .field { margin-bottom: 16px; position: relative; }
   label { display: block; font-size: 12px; font-weight: 500; color: var(--muted);
     letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 7px; }
   input { width: 100%; background: var(--surface2); border: 0.5px solid var(--border2);
     border-radius: 8px; padding: 11px 14px; color: var(--text); font-size: 14px;
     font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.15s; }
   input:focus { border-color: var(--accent); }
+  input.valid   { border-color: var(--green); }
+  input.invalid { border-color: var(--red); }
+  .field-hint { font-size: 11px; margin-top: 5px; min-height: 16px; display: flex; align-items: center; gap: 5px; }
+  .field-hint.ok  { color: var(--green); }
+  .field-hint.err { color: var(--red); }
+  .pw-strength { display: flex; gap: 4px; margin-top: 6px; }
+  .pw-bar { flex: 1; height: 3px; border-radius: 2px; background: var(--border2); transition: background .2s; }
+  .pw-bar.weak   { background: var(--red); }
+  .pw-bar.medium { background: var(--accent); }
+  .pw-bar.strong { background: var(--green); }
   .btn { width: 100%; padding: 12px; background: var(--accent); border: none;
     border-radius: 8px; color: white; font-size: 14px; font-weight: 600;
     font-family: 'DM Sans', sans-serif; cursor: pointer; transition: all 0.15s; margin-top: 8px; }
@@ -60,24 +70,119 @@
     <div class="error" id="error"></div>
     <div class="success" id="success"></div>
     <div class="field"><label>Full name</label>
-      <input type="text" id="name" placeholder="Siddhi Kulkarni" /></div>
+      <input type="text" id="name" placeholder="Siddhi Kulkarni"
+             oninput="validateName(this)" onblur="validateName(this,true)"/>
+      <div class="field-hint" id="nameHint"></div>
+    </div>
     <div class="field"><label>Email</label>
-      <input type="email" id="email" placeholder="you@example.com" /></div>
+      <input type="email" id="email" placeholder="you@example.com"
+             oninput="validateEmail(this)" onblur="validateEmail(this,true)"/>
+      <div class="field-hint" id="emailHint"></div>
+    </div>
     <div class="field"><label>Password</label>
-      <input type="password" id="password" placeholder="Min 6 characters" /></div>
+      <input type="password" id="password" placeholder="Min 8 characters"
+             oninput="validatePassword(this)" onblur="validatePassword(this,true)"/>
+      <div class="pw-strength"><div class="pw-bar" id="bar1"></div><div class="pw-bar" id="bar2"></div><div class="pw-bar" id="bar3"></div></div>
+      <div class="field-hint" id="passwordHint"></div>
+    </div>
+    <div class="field"><label>Confirm password</label>
+      <input type="password" id="confirm" placeholder="Re-enter password"
+             oninput="validateConfirm(this)" onblur="validateConfirm(this,true)"/>
+      <div class="field-hint" id="confirmHint"></div>
+    </div>
     <button class="btn" id="btn" onclick="register()">Create account</button>
     <div class="link-row">Already have an account? <a href="/login">Sign in</a></div>
   </div>
 </div>
 <script>
+  const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  function setField(el, hintId, state, msg) {
+    el.classList.remove('valid','invalid');
+    const hint = document.getElementById(hintId);
+    hint.className = 'field-hint';
+    hint.textContent = msg;
+    if (state === 'ok')  { el.classList.add('valid');   hint.classList.add('ok'); }
+    if (state === 'err') { el.classList.add('invalid'); hint.classList.add('err'); }
+  }
+
+  function validateName(el, blur) {
+    const v = el.value.trim();
+    if (!v)          setField(el,'nameHint', blur?'err':'', blur?'Name is required':'');
+    else if (v.length < 2) setField(el,'nameHint','err','Name must be at least 2 characters');
+    else if (!/^[a-zA-Z\s'-]+$/.test(v)) setField(el,'nameHint','err','Name can only contain letters, spaces, hyphens');
+    else             setField(el,'nameHint','ok','✓ Looks good');
+  }
+
+  function validateEmail(el, blur) {
+    const v = el.value.trim();
+    if (!v)                setField(el,'emailHint', blur?'err':'', blur?'Email is required':'');
+    else if (!EMAIL_RE.test(v)) setField(el,'emailHint','err','Enter a valid email (e.g. you@example.com)');
+    else                   setField(el,'emailHint','ok','✓ Valid email');
+  }
+
+  function validatePassword(el, blur) {
+    const v = el.value;
+    const bars = [document.getElementById('bar1'), document.getElementById('bar2'), document.getElementById('bar3')];
+    bars.forEach(b => b.className = 'pw-bar');
+
+    if (!v) {
+      setField(el,'passwordHint', blur?'err':'', blur?'Password is required':'');
+      return;
+    }
+    // Strength checks
+    const hasLen    = v.length >= 8;
+    const hasUpper  = /[A-Z]/.test(v);
+    const hasLower  = /[a-z]/.test(v);
+    const hasNum    = /\d/.test(v);
+    const hasSpec   = /[^A-Za-z0-9]/.test(v);
+    const score = [hasLen, hasUpper && hasLower, hasNum || hasSpec].filter(Boolean).length;
+
+    if (score === 1) { bars[0].classList.add('weak');   setField(el,'passwordHint','err','Weak — add uppercase, numbers or symbols'); }
+    if (score === 2) { bars[0].classList.add('medium'); bars[1].classList.add('medium'); setField(el,'passwordHint','ok','Medium strength'); }
+    if (score === 3) { bars.forEach(b => b.classList.add('strong')); setField(el,'passwordHint','ok','✓ Strong password'); }
+
+    if (!hasLen) setField(el,'passwordHint','err','At least 8 characters required');
+
+    // Re-validate confirm if already filled
+    const conf = document.getElementById('confirm');
+    if (conf.value) validateConfirm(conf);
+  }
+
+  function validateConfirm(el, blur) {
+    const v = el.value;
+    const pw = document.getElementById('password').value;
+    if (!v)       setField(el,'confirmHint', blur?'err':'', blur?'Please confirm your password':'');
+    else if (v !== pw) setField(el,'confirmHint','err','Passwords do not match');
+    else          setField(el,'confirmHint','ok','✓ Passwords match');
+  }
+
   async function register() {
-    const btn = document.getElementById('btn');
-    const name = document.getElementById('name').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    if (!name || !email || !password) { showError('Fill in all fields'); return; }
-    if (password.length < 6) { showError('Password must be at least 6 characters'); return; }
-    btn.disabled = true; btn.textContent = 'Creating account...';
+    const btn   = document.getElementById('btn');
+    const nameEl = document.getElementById('name');
+    const emailEl = document.getElementById('email');
+    const passEl  = document.getElementById('password');
+    const confEl  = document.getElementById('confirm');
+
+    // Trigger all validations
+    validateName(nameEl, true);
+    validateEmail(emailEl, true);
+    validatePassword(passEl, true);
+    validateConfirm(confEl, true);
+
+    const name     = nameEl.value.trim();
+    const email    = emailEl.value.trim();
+    const password = passEl.value;
+    const confirm  = confEl.value;
+
+    if (!name || name.length < 2)          { showError('Enter a valid full name'); nameEl.focus(); return; }
+    if (!/^[a-zA-Z\s'-]+$/.test(name))     { showError('Name contains invalid characters'); nameEl.focus(); return; }
+    if (!email || !EMAIL_RE.test(email))   { showError('Enter a valid email address'); emailEl.focus(); return; }
+    if (!password || password.length < 8)  { showError('Password must be at least 8 characters'); passEl.focus(); return; }
+    if (password !== confirm)              { showError('Passwords do not match'); confEl.focus(); return; }
+
+    btn.disabled = true; btn.textContent = 'Creating account…';
+    document.getElementById('error').classList.remove('show');
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -85,17 +190,20 @@
       });
       const data = await res.json();
       if (res.ok) {
-        document.getElementById('success').textContent = 'Account created! Redirecting...';
+        document.getElementById('success').textContent = '✓ Account created! Redirecting…';
         document.getElementById('success').classList.add('show');
         setTimeout(() => window.location.href = '/login', 1200);
       } else { showError(data.error || 'Registration failed'); }
-    } catch (e) { showError('Connection error'); }
+    } catch (e) { showError('Connection error. Try again.'); }
     btn.disabled = false; btn.textContent = 'Create account';
   }
+
   function showError(msg) {
     const e = document.getElementById('error');
     e.textContent = msg; e.classList.add('show');
   }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') register(); });
 </script>
 </body>
 </html>

@@ -1,253 +1,2039 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Docify — Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Docify — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #0c0c0f; --surface: #141418; --surface2: #1a1a20; --surface3: #202028;
-    --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
-    --text: #eeece6; --muted: #7a7870; --accent: #7c6af7; --accent2: #a594ff;
-    --green: #3fba8c; --red: #e05a5a; --amber: #f0a340;
-  }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-  /* NAV */
-  nav { display: flex; align-items: center; padding: 0 28px; height: 56px;
-    background: var(--surface); border-bottom: 0.5px solid var(--border); gap: 16px; }
-  .logo { display: flex; align-items: center; gap: 8px; text-decoration: none; margin-right: auto; }
-  .logo-icon { width: 30px; height: 30px; background: var(--accent); border-radius: 7px;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Serif Display', serif; font-size: 15px; color: white; font-style: italic; }
-  .logo-text { font-family: 'DM Serif Display', serif; font-size: 18px; font-style: italic; color: var(--text); }
-  .search-bar { display: flex; align-items: center; gap: 8px;
-    background: var(--surface2); border: 0.5px solid var(--border2);
-    border-radius: 8px; padding: 0 12px; height: 34px; width: 260px; }
-  .search-bar input { background: none; border: none; outline: none; color: var(--text);
-    font-size: 13px; font-family: 'DM Sans', sans-serif; width: 100%; }
-  .search-bar svg { color: var(--muted); flex-shrink: 0; }
-  .avatar-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--accent);
-    border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700; color: white; }
-  .logout-btn { padding: 6px 14px; background: transparent; border: 0.5px solid var(--border2);
-    border-radius: 7px; color: var(--muted); font-size: 13px; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
-  .logout-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.25); }
-  /* MAIN */
-  .main { max-width: 1100px; margin: 0 auto; padding: 40px 28px; }
-  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-  .section-title { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; }
-  .new-btn { display: flex; align-items: center; gap: 7px; padding: 8px 16px;
-    background: var(--accent); border: none; border-radius: 8px; color: white;
-    font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'DM Sans', sans-serif;
-    transition: all 0.15s; }
-  .new-btn:hover { background: var(--accent2); transform: translateY(-1px); }
-  .new-btn svg { width: 14px; height: 14px; }
-  /* DOC GRID */
-  .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 48px; }
-  .doc-card { background: var(--surface); border: 0.5px solid var(--border2);
-    border-radius: 12px; overflow: hidden; cursor: pointer;
-    transition: all 0.2s; position: relative; }
-  .doc-card:hover { border-color: rgba(124,106,247,0.5); transform: translateY(-2px); }
-  .doc-thumb { height: 130px; background: var(--surface2);
-    display: flex; align-items: center; justify-content: center;
-    border-bottom: 0.5px solid var(--border); position: relative; overflow: hidden; }
-  .doc-thumb-lines { padding: 16px; width: 100%; }
-  .thumb-line { height: 8px; background: var(--surface3); border-radius: 2px; margin-bottom: 7px; }
-  .thumb-line:nth-child(1) { width: 70%; }
-  .thumb-line:nth-child(2) { width: 90%; }
-  .thumb-line:nth-child(3) { width: 60%; }
-  .thumb-line:nth-child(4) { width: 80%; }
-  .doc-info { padding: 14px; }
-  .doc-name { font-size: 13px; font-weight: 500; margin-bottom: 4px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .doc-meta { font-size: 11px; color: var(--muted); }
-  .doc-menu { position: absolute; top: 8px; right: 8px; opacity: 0; transition: opacity 0.15s; }
-  .doc-card:hover .doc-menu { opacity: 1; }
-  .doc-menu button { width: 28px; height: 28px; border-radius: 6px;
-    background: var(--surface); border: 0.5px solid var(--border2);
-    color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-  .doc-menu button:hover { color: var(--red); }
-  /* EMPTY */
-  .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
-  .empty-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.4; }
-  .empty p { font-size: 14px; }
-  /* SHARED BADGE */
-  .shared-badge { position: absolute; top: 8px; left: 8px; background: rgba(63,186,140,0.15);
-    border: 0.5px solid rgba(63,186,140,0.3); color: var(--green);
-    font-size: 9px; font-weight: 700; letter-spacing: 0.06em; padding: 2px 7px;
-    border-radius: 4px; text-transform: uppercase; }
-  /* MODAL */
-  .modal-overlay { display: none; position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7); z-index: 100;
-    align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-  .modal-overlay.open { display: flex; }
-  .modal { background: var(--surface); border: 0.5px solid var(--border2);
-    border-radius: 14px; padding: 28px; width: 360px; }
-  .modal h3 { font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 16px; }
-  .modal input { width: 100%; background: var(--surface2); border: 0.5px solid var(--border2);
-    border-radius: 8px; padding: 10px 14px; color: var(--text); font-size: 14px;
-    font-family: 'DM Sans', sans-serif; outline: none; margin-bottom: 14px; }
-  .modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
-  .btn-ghost { padding: 8px 16px; background: transparent; border: 0.5px solid var(--border2);
-    border-radius: 7px; color: var(--muted); font-size: 13px; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; }
-  .btn-solid { padding: 8px 16px; background: var(--accent); border: none;
-    border-radius: 7px; color: white; font-size: 13px; font-weight: 600; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; }
-  .greeting { font-size: 13px; color: var(--muted); }
-  .greeting strong { color: var(--text); }
+/* ═══════════════════════════════════════════
+   DOCUFORGE DASHBOARD — UPGRADED UI
+   Glassmorphism · Carousel · Animations
+═══════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f0ede8;
+  --bg2: #e8e4de;
+  --surface: rgba(255,255,255,0.85);
+  --surface-solid: #ffffff;
+  --surface2: rgba(255,255,255,0.5);
+  --glass: rgba(255,255,255,0.6);
+  --glass-border: rgba(255,255,255,0.85);
+  --border: rgba(0,0,0,0.07);
+  --border2: rgba(0,0,0,0.12);
+  --text-primary: #1a1814;
+  --text-secondary: #6b6760;
+  --text-muted: #a09d98;
+  --accent: #1a1814;
+  --accent-fg: #ffffff;
+  --amber: #f4a547;
+  --sidebar-w: 76px;
+  --right-w: 360px;
+  --radius: 20px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+  --font: 'Sora', sans-serif;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --shadow-md: 0 8px 40px rgba(0,0,0,0.12);
+  --shadow-lg: 0 16px 60px rgba(0,0,0,0.16);
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -200px; right: -100px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(244,165,71,0.12) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -150px; left: 200px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(126,140,222,0.1) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+body {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr var(--right-w);
+  grid-template-rows: 100vh;
+  position: relative;
+}
+
+/* SIDEBAR */
+.sidebar {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0 24px;
+  gap: 2px;
+  position: relative; z-index: 10;
+  animation: fadeIn .4s ease;
+}
+
+.sidebar-logo {
+  display: flex; flex-direction: column; align-items: center;
+  margin-bottom: 28px; gap: 5px;
+}
+
+.logo-mark {
+  width: 38px; height: 38px;
+  background: var(--accent); color: #fff;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700; letter-spacing: -1px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  transition: transform .2s;
+}
+.logo-mark:hover { transform: rotate(-5deg) scale(1.08); }
+.logo-text { font-size: 8px; font-weight: 600; color: var(--text-muted); letter-spacing: .08em; text-transform: uppercase; }
+
+.sidebar-nav {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 4px;
+  flex: 1; width: 100%; padding: 0 10px;
+}
+
+.nav-item {
+  width: 100%; height: 48px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px;
+  border-radius: 14px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  cursor: pointer; border: none; background: none;
+}
+.nav-item svg { width: 19px; height: 19px; transition: transform .2s; }
+.nav-item span { font-size: 8px; font-weight: 600; letter-spacing: .02em; }
+.nav-item:hover { background: rgba(255,255,255,0.7); color: var(--text-primary); transform: scale(1.05); }
+.nav-item:hover svg { transform: scale(1.1); }
+.nav-item.active { background: var(--accent); color: #fff; box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+.settings-item { margin-top: auto; }
+
+/* MAIN */
+.main-content {
+  overflow-y: auto; overflow-x: hidden;
+  padding: 32px 36px;
+  display: flex; flex-direction: column; gap: 36px;
+  position: relative; z-index: 1;
+  scroll-behavior: smooth;
+}
+.main-content::-webkit-scrollbar { width: 4px; }
+.main-content::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+/* TOPBAR */
+.topbar {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 16px;
+  position: relative;
+  animation: fadeUp .45s .05s ease both;
+}
+.topbar::before {
+  content: 'DOCS';
+  position: absolute; top: -18px; left: -8px;
+  font-size: 88px; font-weight: 700;
+  color: rgba(0,0,0,0.03);
+  letter-spacing: -4px;
+  pointer-events: none; user-select: none; line-height: 1;
+}
+
+.greeting {
+  font-size: 24px; font-weight: 700;
+  letter-spacing: -0.8px; line-height: 1.2;
+}
+.greeting-name { position: relative; display: inline-block; }
+.greeting-name::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0;
+  width: 100%; height: 3px;
+  background: var(--amber); border-radius: 2px;
+  transform: scaleX(0); transform-origin: left;
+  animation: underlineIn .6s .5s cubic-bezier(.34,1.56,.64,1) forwards;
+}
+@keyframes underlineIn { to { transform: scaleX(1); } }
+
+.wave { font-size: 22px; display: inline-block; animation: waveAnim 2.5s ease-in-out infinite; }
+@keyframes waveAnim {
+  0%,100% { transform: rotate(0deg); }
+  25% { transform: rotate(20deg); }
+  75% { transform: rotate(-10deg); }
+}
+
+.greeting-sub { font-size: 12px; color: var(--text-secondary); margin-top: 5px; }
+
+.topbar-right {
+  display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0; padding-top: 4px;
+}
+
+.icon-btn {
+  width: 38px; height: 38px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass); backdrop-filter: blur(12px);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-secondary);
+  transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  position: relative;
+}
+.icon-btn svg { width: 16px; height: 16px; }
+.icon-btn:hover { background: var(--surface-solid); color: var(--text-primary); transform: scale(1.1); box-shadow: var(--shadow); }
+.icon-btn#notifBtn:hover svg { animation: bellShake .4s ease; }
+@keyframes bellShake {
+  0%,100%{transform:rotate(0)} 20%{transform:rotate(15deg)} 40%{transform:rotate(-12deg)} 60%{transform:rotate(8deg)} 80%{transform:rotate(-5deg)}
+}
+.notif-dot {
+  position: absolute; top: 8px; right: 8px;
+  width: 7px; height: 7px;
+  background: #f87c7c; border-radius: 50%;
+  border: 2px solid var(--bg);
+}
+
+.new-page-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 16px; height: 38px;
+  background: var(--accent); color: var(--accent-fg);
+  border: none; border-radius: 12px;
+  font-family: var(--font); font-size: 12px; font-weight: 600;
+  cursor: pointer; letter-spacing: .02em;
+  transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+}
+.new-page-btn svg { width: 14px; height: 14px; }
+.new-page-btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+
+/* SECTION */
+.section { animation: fadeUp .45s ease both; }
+.section:nth-child(2) { animation-delay: .1s; }
+.section:nth-child(3) { animation-delay: .15s; }
+.section:nth-child(4) { animation-delay: .2s; }
+.section:nth-child(5) { animation-delay: .25s; }
+
+.section-header {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-title {
+  font-size: 13px; font-weight: 700;
+  letter-spacing: .04em; text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.text-btn {
+  font-size: 12px; font-weight: 500;
+  color: var(--text-muted); background: none; border: none;
+  cursor: pointer; padding: 4px 8px; border-radius: 8px;
+  transition: all .15s; font-family: var(--font);
+}
+.text-btn:hover { background: var(--surface); color: var(--text-primary); }
+.text-btn.accent { color: var(--text-primary); }
+
+/* DOC CAROUSEL */
+.docs-carousel-wrapper {
+  position: relative; display: flex; align-items: center; gap: 8px;
+}
+.docs-carousel {
+  display: flex; gap: 16px;
+  overflow-x: auto; scroll-behavior: smooth;
+  padding: 8px 4px 16px; flex: 1;
+  scrollbar-width: none;
+  cursor: grab;
+}
+.docs-carousel::-webkit-scrollbar { display: none; }
+.docs-carousel:active { cursor: grabbing; }
+.docs-carousel.expanded { flex-wrap: wrap; overflow-x: hidden; }
+
+.carousel-arrow {
+  width: 36px; height: 36px; flex-shrink: 0;
+  background: var(--surface-solid); border: 1px solid var(--border2);
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-secondary);
+  transition: all .15s; box-shadow: var(--shadow-sm);
+}
+.carousel-arrow:hover { color: var(--text-primary); transform: scale(1.05); }
+.carousel-arrow svg { width: 14px; height: 14px; }
+
+.doc-card {
+  min-width: 180px; max-width: 180px; height: 210px;
+  background: var(--card-color, #f87c7c);
+  border-radius: var(--radius);
+  padding: 20px 18px 16px;
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  position: relative; overflow: hidden;
+  cursor: pointer;
+  transition: all .25s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--card-color, #f87c7c) 30%, transparent);
+  animation: cardPop .4s cubic-bezier(.34,1.56,.64,1) both;
+  flex-shrink: 0;
+}
+@keyframes cardPop {
+  0% { opacity: 0; transform: scale(0.85) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.doc-card:hover { transform: translateY(-6px) scale(1.02); box-shadow: 0 12px 32px color-mix(in srgb, var(--card-color, #f87c7c) 40%, transparent); }
+.shine {
+  position: absolute; top: -40%; right: -20%;
+  width: 100px; height: 100px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.doc-name {
+  font-size: 14px; font-weight: 600;
+  color: rgba(0,0,0,0.75);
+  line-height: 1.3; word-break: break-word;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.doc-card-actions {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: auto;
+}
+.card-action-btn {
+  width: 28px; height: 28px;
+  background: rgba(255,255,255,0.4); border: none;
+  border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s; color: rgba(0,0,0,0.6);
+}
+.card-action-btn:hover { background: rgba(255,255,255,0.65); color: rgba(0,0,0,0.85); }
+.card-action-btn svg { width: 13px; height: 13px; }
+.card-action-btn.starred svg { fill: #f4a547; stroke: #f4a547; }
+.card-open-btn {
+  font-size: 11px; font-weight: 600;
+  color: rgba(0,0,0,0.65); text-decoration: none;
+  background: rgba(255,255,255,0.35); padding: 5px 10px;
+  border-radius: 8px; transition: all .15s;
+}
+.card-open-btn:hover { background: rgba(255,255,255,0.6); color: rgba(0,0,0,0.85); }
+
+/* FRIENDS */
+.friends-row {
+  display: flex; gap: 12px; flex-wrap: wrap;
+}
+.friend-chip {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px; backdrop-filter: blur(10px);
+  transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  cursor: pointer;
+}
+.friend-chip:hover { transform: translateY(-3px); box-shadow: var(--shadow); background: var(--surface-solid); }
+.friend-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #fff;
+  position: relative; flex-shrink: 0;
+}
+.friend-avatar.is-online::after {
+  content: ''; position: absolute; bottom: 1px; right: 1px;
+  width: 9px; height: 9px;
+  background: #4ecba0; border-radius: 50%;
+  border: 2px solid var(--bg);
+}
+.friend-info { display: flex; flex-direction: column; gap: 1px; }
+.friend-name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+.friend-status { font-size: 10px; color: var(--text-muted); }
+.friend-status.online { color: #4ecba0; }
+.friend-status.busy { color: #f4a547; }
+
+/* SHARED DOCS */
+.shared-row {
+  display: flex; gap: 14px; flex-wrap: wrap;
+}
+.shared-card {
+  width: 150px; min-height: 120px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm); padding: 16px 14px;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 8px;
+  cursor: pointer; transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  text-align: center;
+}
+.shared-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); background: var(--surface-solid); }
+.shared-icon { width: 40px; height: 40px; background: var(--bg2); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.shared-icon svg { width: 18px; height: 18px; color: var(--text-secondary); }
+.shared-name { font-size: 12px; font-weight: 600; color: var(--text-primary); line-height: 1.3; word-break: break-word; }
+.shared-by { font-size: 10px; color: var(--text-muted); }
+.new-shared-card .shared-icon.plus-icon { background: rgba(26,24,20,0.08); }
+.new-shared-card .shared-icon.plus-icon svg { color: var(--text-secondary); }
+
+/* RIGHT PANEL */
+.right-panel {
+  overflow-y: auto; overflow-x: hidden;
+  padding: 28px 24px;
+  display: flex; flex-direction: column; gap: 20px;
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-left: 1px solid var(--glass-border);
+  position: relative; z-index: 10;
+  animation: fadeIn .4s ease;
+}
+.right-panel::-webkit-scrollbar { width: 4px; }
+.right-panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.profile-card {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 20px 16px; background: var(--surface-solid);
+  border-radius: var(--radius); box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+.profile-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; font-weight: 700; margin-bottom: 4px;
+}
+.profile-name { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.profile-plan { font-size: 11px; color: var(--text-muted); }
+.edit-profile-btn {
+  margin-top: 8px; padding: 7px 18px;
+  border: 1.5px solid var(--border2); border-radius: 10px;
+  background: none; cursor: pointer; font-family: var(--font);
+  font-size: 12px; font-weight: 500; color: var(--text-secondary);
+  text-decoration: none; transition: all .15s; display: inline-block;
+}
+.edit-profile-btn:hover { background: var(--bg); color: var(--text-primary); }
+
+.deadline-card {
+  background: var(--surface-solid); border-radius: var(--radius);
+  padding: 18px; box-shadow: var(--shadow-sm);
+}
+.panel-title {
+  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-secondary); margin-bottom: 14px;
+}
+.calendar-strip {
+  display: flex; gap: 4px; margin-bottom: 16px;
+}
+.cal-day {
+  flex: 1; display: flex; flex-direction: column; align-items: center;
+  gap: 4px; padding: 6px 0;
+  border-radius: 10px; cursor: pointer;
+  transition: all .15s;
+}
+.cal-day:hover { background: var(--bg2); }
+.cal-day.active { background: var(--accent); }
+.cal-label { font-size: 8px; font-weight: 600; color: var(--text-muted); letter-spacing: .04em; }
+.cal-num { font-size: 13px; font-weight: 700; color: var(--text-secondary); }
+.cal-day.active .cal-label { color: rgba(255,255,255,0.7); }
+.cal-day.active .cal-num { color: #fff; }
+
+.deadline-doc { margin-top: 4px; }
+.deadline-doc-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.deadline-tag { font-size: 10px; color: var(--text-muted); }
+.icon-btn-sm { width: 26px; height: 26px; border: 1px solid var(--border2); background: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+.icon-btn-sm:hover { background: var(--bg2); color: var(--text-primary); }
+.icon-btn-sm svg { width: 12px; height: 12px; }
+.deadline-doc-name { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+.deadline-date { font-size: 11px; color: var(--text-secondary); display: block; margin-bottom: 10px; }
+.progress-bar { height: 5px; background: var(--bg2); border-radius: 3px; overflow: hidden; margin-bottom: 10px; }
+.progress-fill { height: 100%; width: 0; background: var(--amber); border-radius: 3px; transition: width 1s cubic-bezier(.34,1.56,.64,1); }
+.expand-btn { font-size: 11px; color: var(--text-muted); background: none; border: none; cursor: pointer; font-family: var(--font); padding: 0; }
+.expand-btn:hover { color: var(--text-primary); }
+
+.set-deadline-btn {
+  width: 100%; padding: 12px;
+  background: var(--bg2); border: 1.5px dashed var(--border2);
+  border-radius: var(--radius-sm); cursor: pointer;
+  font-family: var(--font); font-size: 12px; font-weight: 500;
+  color: var(--text-secondary); transition: all .15s; line-height: 1.4;
+}
+.set-deadline-btn:hover { background: var(--surface-solid); color: var(--text-primary); border-style: solid; }
+
+/* SEARCH MODAL */
+.search-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.3); backdrop-filter: blur(6px);
+  z-index: 200; display: none; align-items: flex-start;
+  justify-content: center; padding-top: 80px;
+}
+.search-overlay.open { display: flex; }
+.search-box {
+  background: var(--surface-solid); border-radius: var(--radius);
+  width: 560px; max-width: 95vw;
+  box-shadow: var(--shadow-lg); overflow: hidden;
+  animation: fadeUp .2s ease;
+}
+.search-input-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+}
+.search-input-row svg { width: 18px; height: 18px; color: var(--text-muted); flex-shrink: 0; }
+.search-input {
+  flex: 1; border: none; background: transparent;
+  font-family: var(--font); font-size: 15px; color: var(--text-primary); outline: none;
+}
+.search-input::placeholder { color: var(--text-muted); }
+.search-close-btn {
+  background: var(--bg2); border: none; border-radius: 6px;
+  padding: 3px 8px; font-size: 11px; color: var(--text-muted);
+  cursor: pointer; font-family: var(--font);
+}
+.search-results { max-height: 420px; overflow-y: auto; }
+.search-results::-webkit-scrollbar { width: 3px; }
+.search-results::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.search-section-label {
+  font-size: 10px; font-weight: 700; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--text-muted); padding: 12px 20px 6px;
+}
+.search-result-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 20px; cursor: pointer; transition: background .1s; text-decoration: none;
+}
+.search-result-item:hover, .search-result-item.active { background: var(--bg2); }
+.search-result-icon {
+  width: 34px; height: 34px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px;
+}
+.search-result-icon.doc { background: rgba(123,140,222,.15); }
+.search-result-icon.task { background: rgba(244,165,71,.15); }
+.search-result-body { flex: 1; min-width: 0; }
+.search-result-title {
+  font-size: 13px; font-weight: 600; color: var(--text-primary);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.search-result-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+.search-result-sub mark { background: rgba(244,165,71,.3); color: var(--text-primary); border-radius: 2px; padding: 0 2px; }
+.search-empty { font-size: 13px; color: var(--text-muted); text-align: center; padding: 32px 20px; }
+.search-footer { font-size: 10px; color: var(--text-muted); padding: 8px 20px; border-top: 1px solid var(--border); display: flex; gap: 16px; }
+.search-footer kbd { background: var(--bg2); border: 1px solid var(--border2); border-radius: 4px; padding: 1px 5px; font-size: 10px; }
+
+/* NOTIFICATION PANEL */
+.notif-panel {
+  position: fixed; top: 70px; right: 100px;
+  width: 360px; max-height: 480px;
+  background: var(--surface-solid); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); border: 1px solid var(--border2);
+  display: none; flex-direction: column; z-index: 500;
+  animation: fadeUp .2s ease;
+}
+.notif-panel.open { display: flex; }
+.notif-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 10px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.notif-header-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.notif-mark-read {
+  font-size: 11px; color: var(--text-muted); background: none;
+  border: none; cursor: pointer; font-family: var(--font);
+}
+.notif-mark-read:hover { color: var(--text-primary); }
+.notif-list { overflow-y: auto; flex: 1; }
+.notif-list::-webkit-scrollbar { width: 3px; }
+.notif-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+.notif-item {
+  display: flex; gap: 10px; padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background .12s; cursor: pointer;
+}
+.notif-item:hover { background: var(--bg2); }
+.notif-item.unread { background: rgba(244,165,71,0.06); }
+.notif-item.unread:hover { background: rgba(244,165,71,0.1); }
+.notif-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; flex-shrink: 0; margin-top: 1px;
+}
+.notif-icon.assigned { background: rgba(124,106,247,0.12); }
+.notif-icon.completed { background: rgba(78,203,160,0.12); }
+.notif-body { flex: 1; min-width: 0; }
+.notif-msg { font-size: 12px; color: var(--text-primary); line-height: 1.45; }
+.notif-time { font-size: 10px; color: var(--text-muted); margin-top: 3px; }
+.notif-unread-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--amber); flex-shrink: 0; margin-top: 6px;
+}
+.notif-empty {
+  font-size: 12px; color: var(--text-muted);
+  text-align: center; padding: 32px 16px;
+}
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.25); backdrop-filter: blur(6px);
+  z-index: 100; display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .25s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.color-modal {
+  background: var(--surface-solid); border-radius: var(--radius);
+  padding: 24px; width: 340px; box-shadow: var(--shadow-lg);
+  transform: translateY(12px) scale(0.97); transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+}
+.modal-overlay.open .color-modal { transform: translateY(0) scale(1); }
+.modal-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; color: var(--text-primary); }
+.modal-label { display: block; font-size: 11px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .05em; }
+.modal-select, .modal-input {
+  width: 100%; padding: 8px 12px;
+  background: var(--bg); border: 1.5px solid var(--border2);
+  border-radius: 10px; font-family: var(--font); font-size: 13px;
+  color: var(--text-primary); outline: none; transition: border-color .15s;
+}
+.modal-select:focus, .modal-input:focus { border-color: var(--text-primary); }
+.modal-save, .modal-close {
+  padding: 9px 18px; border-radius: 10px; border: none;
+  font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all .15s;
+}
+.modal-save { background: var(--accent); color: #fff; }
+.modal-save:hover { opacity: 0.85; }
+.modal-close { background: var(--bg2); color: var(--text-secondary); }
+.modal-close:hover { background: var(--bg); color: var(--text-primary); }
+
+.color-palette {
+  display: grid; grid-template-columns: repeat(6, 1fr);
+  gap: 8px; margin-bottom: 16px;
+}
+.color-swatch {
+  width: 36px; height: 36px; border-radius: 10px;
+  cursor: pointer; transition: all .15s cubic-bezier(.34,1.56,.64,1);
+  border: 3px solid transparent;
+  animation: swatchPop .2s cubic-bezier(.34,1.56,.64,1) both;
+}
+.color-swatch:hover { transform: scale(1.15); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.color-swatch.selected { border-color: var(--text-primary); transform: scale(1.1); }
+@keyframes swatchPop { from { opacity:0; transform: scale(.6); } to { opacity:1; transform: scale(1); } }
+.color-custom-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.custom-label { font-size: 12px; color: var(--text-secondary); }
+
+/* BIN section */
+.bin-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  background: #f87c7c; color: #fff; border-radius: 9px;
+  font-size: 10px; font-weight: 700; margin-left: 6px;
+}
+
+/* ROLE BADGES */
+.role-badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;margin-top:2px}
+.rb-editor{background:#EAF3DE;color:#3B6D11}
+.rb-viewer{background:#FAEEDA;color:#854F0B}
+
+/* ══════════════════════════════════════════
+   TASK WIDGETS — VIBRANT REDESIGN
+══════════════════════════════════════════ */
+
+/* Circular checkbox */
+.tw-check {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid #d0ccc6; background: transparent;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: transparent; flex-shrink: 0;
+  transition: all .25s cubic-bezier(.34,1.56,.64,1);
+}
+.tw-check:hover { border-color: #4ecba0; transform: scale(1.15); box-shadow: 0 0 0 3px rgba(78,203,160,.15); }
+.tw-check.done { background: linear-gradient(135deg,#4ecba0,#2db88a); border-color: transparent; color: #fff; box-shadow: 0 2px 8px rgba(78,203,160,.4); }
+
+/* ── MY TASKS WIDGET ── */
+.mytasks-widget { display: flex; flex-direction: column; gap: 10px; }
+
+/* Doc group — each gets a unique gradient accent */
+.mytasks-doc-group {
+  border-radius: 16px; overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  border: 1px solid rgba(255,255,255,.8);
+}
+.mytasks-doc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px 9px;
+  border-bottom: 1px solid rgba(255,255,255,.4);
+}
+.mytasks-doc-name {
+  font-size: 10px; font-weight: 800; color: rgba(255,255,255,.95);
+  letter-spacing: .07em; text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 155px;
+  text-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+.mytasks-open-btn {
+  font-size: 9px; padding: 3px 10px; border-radius: 20px;
+  background: rgba(255,255,255,.25); color: #fff; border: 1px solid rgba(255,255,255,.4);
+  cursor: pointer; font-family: var(--font); font-weight: 700;
+  text-decoration: none; flex-shrink: 0; letter-spacing: .03em;
+  backdrop-filter: blur(4px); transition: all .15s;
+}
+.mytasks-open-btn:hover { background: rgba(255,255,255,.4); }
+
+.mytasks-slider-wrap { position: relative; background: rgba(255,255,255,.55); backdrop-filter: blur(8px); }
+.mytasks-slider {
+  display: flex; gap: 8px; overflow-x: auto; scroll-behavior: smooth;
+  padding: 10px 12px 12px; scrollbar-width: none;
+}
+.mytasks-slider::-webkit-scrollbar { display: none; }
+.mytasks-slide-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  right: 6px; width: 24px; height: 24px;
+  background: #fff; border: 1px solid rgba(0,0,0,.1);
+  border-radius: 50%; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; font-size: 13px; color: var(--text-secondary);
+  box-shadow: 0 2px 8px rgba(0,0,0,.12); z-index: 2; transition: all .15s;
+}
+.mytasks-slide-btn:hover { transform: translateY(-50%) scale(1.1); box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+
+.tw-card {
+  min-width: 150px; max-width: 150px;
+  background: #fff; border: none;
+  border-radius: 12px; padding: 11px 11px 9px; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 7px;
+  transition: all .2s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+.tw-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.14); transform: translateY(-2px) scale(1.02); }
+.tw-card-top { display: flex; align-items: flex-start; gap: 7px; }
+.tw-card-title {
+  font-size: 11px; font-weight: 700; color: #1a1814;
+  line-height: 1.4; flex: 1; word-break: break-word;
+}
+.tw-card-title.done { text-decoration: line-through; color: #a09d98; }
+.tw-card-due {
+  font-size: 10px; color: #a09d98;
+  display: flex; align-items: center; gap: 3px;
+}
+.tw-card-due.overdue { color: #e24b4a; font-weight: 700; }
+.tw-card-footer { display: flex; align-items: center; margin-top: 1px; }
+.tw-card-status {
+  font-size: 9px; font-weight: 800; padding: 2px 8px;
+  border-radius: 20px; letter-spacing: .05em;
+}
+.tw-card-status.pending { background: linear-gradient(135deg,#fff3e0,#ffe0b2); color: #e65100; }
+.tw-card-status.done { background: linear-gradient(135deg,#e8f5e9,#c8e6c9); color: #1b5e20; }
+
+.mytasks-expand-btn {
+  width: 100%; padding: 8px; border: none;
+  background: rgba(255,255,255,.6); border-top: 1px solid rgba(0,0,0,.06);
+  font-size: 11px; font-weight: 700; color: var(--text-muted);
+  cursor: pointer; font-family: var(--font); transition: all .15s;
+  border-radius: 0 0 16px 16px; backdrop-filter: blur(4px);
+}
+.mytasks-expand-btn:hover { background: rgba(255,255,255,.9); color: var(--text-primary); }
+
+/* ── TASKS ASSIGNED BY ME ── */
+.abm-doc-group {
+  border-radius: 16px; margin-bottom: 10px;
+  box-shadow: 0 2px 12px rgba(0,0,0,.07);
+  border: 1px solid rgba(255,255,255,.8);
+  overflow: hidden;
+}
+.abm-doc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 11px 14px 9px;
+  border-bottom: 1px solid rgba(255,255,255,.4);
+}
+.abm-doc-name {
+  font-size: 10px; font-weight: 800; color: rgba(255,255,255,.95);
+  letter-spacing: .07em; text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;
+  text-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+.abm-open-btn {
+  font-size: 9px; padding: 3px 10px; border-radius: 20px;
+  background: rgba(255,255,255,.25); color: #fff; border: 1px solid rgba(255,255,255,.4);
+  cursor: pointer; font-family: var(--font); font-weight: 700;
+  text-decoration: none; flex-shrink: 0; backdrop-filter: blur(4px); transition: all .15s;
+}
+.abm-open-btn:hover { background: rgba(255,255,255,.4); }
+
+.abm-task-card {
+  background: rgba(255,255,255,.7); border-radius: 12px;
+  padding: 10px 12px; margin: 8px 10px;
+  display: flex; flex-direction: column; gap: 7px;
+  border: 1px solid rgba(255,255,255,.9);
+  backdrop-filter: blur(6px); transition: all .15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+.abm-task-card:hover { background: #fff; box-shadow: 0 4px 16px rgba(0,0,0,.1); transform: translateX(2px); }
+.abm-task-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+.abm-task-title {
+  font-size: 12px; font-weight: 700; color: #1a1814; line-height: 1.35; flex: 1;
+}
+.abm-task-title.done { text-decoration: line-through; color: #a09d98; }
+.abm-task-status {
+  font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 20px;
+  flex-shrink: 0; letter-spacing: .05em;
+}
+.abm-task-status.pending { background: linear-gradient(135deg,#fff3e0,#ffe0b2); color: #e65100; }
+.abm-task-status.done { background: linear-gradient(135deg,#e8f5e9,#c8e6c9); color: #1b5e20; }
+.abm-assignees { display: flex; flex-direction: column; gap: 4px; }
+.abm-assignee-row {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 8px; background: rgba(255,255,255,.8); border-radius: 8px;
+  border: 1px solid rgba(0,0,0,.05);
+}
+.abm-avatar {
+  width: 22px; height: 22px; border-radius: 50%;
+  font-size: 9px; font-weight: 800; color: #fff;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+.abm-assignee-name { font-size: 11px; font-weight: 600; color: #3d3a36; flex: 1; }
+.abm-assignee-due { font-size: 10px; color: #a09d98; font-weight: 500; }
+.abm-assignee-due.overdue { color: #e24b4a; font-weight: 700; }
+.abm-status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.abm-status-dot.done { background: linear-gradient(135deg,#4ecba0,#2db88a); box-shadow: 0 0 4px rgba(78,203,160,.5); }
+.abm-status-dot.pending { background: linear-gradient(135deg,#f4a547,#e8920a); box-shadow: 0 0 4px rgba(244,165,71,.5); }
+.abm-no-assignees { font-size: 11px; color: #a09d98; padding: 4px 8px; font-style: italic; }
+.abm-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 2px; }
+.abm-count { font-size: 10px; color: #a09d98; font-weight: 600; }
+
+/* Bin item row */
+.bin-row { display: flex; flex-direction: column; gap: 8px; }
+.bin-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px;
+  background: var(--glass); border: 1px solid var(--glass-border);
+  border-radius: 12px; transition: all .15s;
+}
+.bin-item:hover { background: var(--surface-solid); }
+.bin-item-name { flex: 1; font-size: 13px; font-weight: 500; color: var(--text-primary); }
+.bin-item-date { font-size: 10px; color: var(--text-muted); }
+.bin-action-btn {
+  padding: 5px 10px; border-radius: 8px; border: 1.5px solid var(--border2);
+  background: none; font-size: 11px; font-weight: 600; cursor: pointer;
+  font-family: var(--font); color: var(--text-secondary); transition: all .15s;
+}
+.bin-action-btn.restore { color: #3B6D11; border-color: #3B6D11; }
+.bin-action-btn.restore:hover { background: #EAF3DE; }
+.bin-action-btn.perm-del { color: #e24b4a; border-color: #e24b4a; }
+.bin-action-btn.perm-del:hover { background: rgba(226,75,74,0.08); }
+.empty-state { font-size: 12px; color: var(--text-muted); text-align: center; padding: 20px 0; }
+
+/* ANIMATIONS */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
-<nav>
-  <a class="logo" href="/dashboard">
-    <div class="logo-icon">D</div>
-    <span class="logo-text">Docify</span>
-  </a>
-  <div class="search-bar">
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="4.5"/><path d="M10 10l2.5 2.5"/></svg>
-    <input id="searchInput" placeholder="Search documents..." oninput="filterDocs()" />
-  </div>
-  <span class="greeting">Hello, <strong id="userName">...</strong></span>
-  <button class="logout-btn" onclick="logout()">Sign out</button>
-</nav>
 
-<div class="main">
-  <div class="section-header">
-    <h2 class="section-title">My documents</h2>
-    <button class="new-btn" onclick="openNewModal()">
-      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 1v12M1 7h12"/></svg>
-      New document
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span class="logo-mark">D</span>
+    <span class="logo-text">DocuForge</span>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="/dashboard" class="nav-item active" title="Home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+      <span>Home</span>
+    </a>
+    <button class="nav-item" id="searchNav" title="Search" onclick="openSearch()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <span>Search</span>
     </button>
-  </div>
-  <div class="doc-grid" id="ownedGrid">
-    <div class="empty"><div class="empty-icon">📄</div><p>No documents yet. Create your first one!</p></div>
+    <button class="nav-item" id="favouritesNav" title="Favourites" onclick="showView('favourites')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+      <span>Stars</span>
+    </button>
+    <button class="nav-item" id="binNav" title="Bin" onclick="showView('bin')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+      <span>Bin</span>
+    </button>
+    <a href="/tasks" class="nav-item" id="tasksNav" title="My Tasks">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      <span>Tasks</span>
+    </a>
+  </nav>
+  <button class="nav-item settings-item" onclick="logout()" title="Logout">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    <span>Logout</span>
+  </button>
+</aside>
+
+<!-- MAIN -->
+<main class="main-content" id="mainContent">
+
+  <!-- ── HOME VIEW ── -->
+  <div id="homeView">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1 class="greeting">
+          Welcome back, <span id="greetingName" class="greeting-name">...</span>! <span class="wave">👋</span>
+        </h1>
+        <p class="greeting-sub">Here's your snapshot for today.</p>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" id="notifBtn" title="Notifications" onclick="toggleNotifPanel()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+          <span class="notif-dot" id="notifDot" style="display:none"></span>
+        </button>
+        <button class="icon-btn" title="Settings" onclick="window.location='/settings'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        </button>
+        <button class="new-page-btn" onclick="createNewDocument()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Page
+        </button>
+      </div>
+    </header>
+
+    <!-- My Docs Carousel -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">My docs</h2>
+        <button class="text-btn" onclick="toggleExpandDocs(this)">Expand all</button>
+      </div>
+      <div class="docs-carousel-wrapper">
+        <button class="carousel-arrow left" onclick="scrollCarousel(-1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="docs-carousel" id="docsCarousel">
+          <div class="doc-card demo-card" style="--card-color:#f87c7c">
+            <div class="shine"></div>
+            <span class="doc-name">Loading...</span>
+          </div>
+        </div>
+        <button class="carousel-arrow right" onclick="scrollCarousel(1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- Friends -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">My Friends</h2>
+        <button class="text-btn" onclick="loadFriends()">Refresh</button>
+      </div>
+      <div class="friends-row" id="friendsRow">
+        <div style="font-size:12px;color:var(--text-muted);padding:8px 0">Loading…</div>
+      </div>
+    </section>
+
+    <!-- Shared Docs -->
+    <section class="section">
+      <div class="section-header">
+        <h2 class="section-title">Doc shared with me</h2>
+        <div style="display:flex;gap:8px">
+          <button class="text-btn accent" onclick="loadDocuments()">Refresh</button>
+        </div>
+      </div>
+      <div class="shared-row" id="sharedDocsRow">
+        <div class="shared-card new-shared-card" onclick="createNewDocument()">
+          <div class="shared-icon plus-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          </div>
+          <span class="shared-name">New Page</span>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /#homeView -->
+
+  <!-- ── STARRED VIEW ── -->
+  <div id="favouritesView" style="display:none">
+    <header class="topbar" style="margin-bottom:0">
+      <div>
+        <h1 class="greeting" style="font-size:20px">⭐ Starred Documents</h1>
+        <p class="greeting-sub">Documents you've marked as favourites.</p>
+      </div>
+      <button class="text-btn" onclick="showView('home')" style="font-size:13px">← Back</button>
+    </header>
+    <div class="docs-carousel" id="starredCarousel" style="flex-wrap:wrap;overflow-x:hidden;padding:8px 0;margin-top:24px;gap:16px;cursor:default;display:flex;">
+      <div class="empty-state" id="starredEmpty">No starred documents yet. Star a doc from your dashboard.</div>
+    </div>
   </div>
 
-  <div class="section-header">
-    <h2 class="section-title">Shared with me</h2>
+  <!-- ── BIN VIEW ── -->
+  <div id="binView" style="display:none">
+    <header class="topbar" style="margin-bottom:0">
+      <div>
+        <h1 class="greeting" style="font-size:20px">🗑️ Bin</h1>
+        <p class="greeting-sub">Deleted documents. Restore or permanently delete.</p>
+      </div>
+      <button class="text-btn" onclick="showView('home')" style="font-size:13px">← Back</button>
+    </header>
+    <div class="bin-row" id="binList" style="margin-top:24px">
+      <div class="empty-state" id="binEmpty">The bin is empty.</div>
+    </div>
   </div>
-  <div class="doc-grid" id="sharedGrid">
-    <div class="empty"><div class="empty-icon">👥</div><p>No shared documents yet.</p></div>
+
+</main>
+
+<!-- RIGHT PANEL -->
+<aside class="right-panel">
+
+  <div class="profile-card">
+    <div class="profile-avatar" id="profileAvatar">?</div>
+    <span class="profile-name" id="profileName">Loading...</span>
+    <span class="profile-plan">Free Plan</span>
+    <a href="/profile" class="edit-profile-btn">Edit Profile</a>
+  </div>
+
+  <div class="deadline-card" style="padding:0;overflow:hidden;">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;">
+      <h3 class="panel-title" style="margin:0">Tasks Assigned By Me</h3>
+      <button onclick="loadAssignedByMe()" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--text-muted);font-family:var(--font);">↻ Refresh</button>
+    </div>
+    <div id="assignedByMeList" style="height:320px;overflow-y:auto;padding:0 10px 10px;scrollbar-width:thin;">
+      <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:16px 0">Loading…</div>
+    </div>
+  </div>
+
+  <!-- MY TASKS WIDGET -->
+  <div style="background:var(--surface-solid);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-sm)">
+    <h3 class="panel-title">My Tasks</h3>
+    <div id="myTasksList" class="mytasks-widget" style="height:320px;overflow-y:auto;padding-right:2px;scrollbar-width:thin;">
+      <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:12px 0">Loading…</div>
+    </div>
+  </div>
+
+</aside>
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-header">
+    <span class="notif-header-title">Notifications</span>
+    <button class="notif-mark-read" onclick="markAllRead()">Mark all as read</button>
+  </div>
+  <div class="notif-list" id="notifList">
+    <div class="notif-empty">Loading…</div>
   </div>
 </div>
 
-<!-- New doc modal -->
-<div class="modal-overlay" id="newModal" onclick="if(event.target===this)closeNewModal()">
-  <div class="modal">
-    <h3>New document</h3>
-    <input type="text" id="newTitle" placeholder="Document title..." value="Untitled document" />
-    <div class="modal-btns">
-      <button class="btn-ghost" onclick="closeNewModal()">Cancel</button>
-      <button class="btn-solid" onclick="createDoc()">Create</button>
+<!-- SEARCH MODAL -->
+<div class="search-overlay" id="searchOverlay" onclick="if(event.target===this)closeSearch()">
+  <div class="search-box">
+    <div class="search-input-row">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input class="search-input" id="searchInput" placeholder="Search documents and tasks…" oninput="onSearchInput()" onkeydown="onSearchKey(event)" autocomplete="off">
+      <button class="search-close-btn" onclick="closeSearch()">Esc</button>
+    </div>
+    <div class="search-results" id="searchResults">
+      <div class="search-empty">Start typing to search…</div>
+    </div>
+    <div class="search-footer">
+      <span><kbd>↑↓</kbd> navigate</span>
+      <span><kbd>Enter</kbd> open</span>
+      <span><kbd>Esc</kbd> close</span>
+    </div>
+  </div>
+</div>
+
+<!-- COLOR MODAL -->
+<div class="modal-overlay" id="colorModal" onclick="closeColorPicker(event)">
+  <div class="color-modal">
+    <h3 class="modal-title">Pick card color</h3>
+    <div class="color-palette" id="colorPalette"></div>
+    <div class="color-custom-row">
+      <label class="custom-label">Custom color</label>
+      <input type="color" id="customColorInput" onchange="applyCustomColor(this.value)"/>
+    </div>
+    <button class="modal-close" onclick="closeColorPicker()">Done</button>
+  </div>
+</div>
+
+<!-- DEADLINE MODAL -->
+<div class="modal-overlay" id="deadlineModal" onclick="closeSetDeadline(event)">
+  <div class="color-modal">
+    <h3 class="modal-title">Set Deadline</h3>
+    <div style="margin-bottom:12px">
+      <label class="modal-label">Document</label>
+      <select class="modal-select" id="deadlineDocSelect"></select>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="modal-label">Date &amp; Time</label>
+      <input type="datetime-local" class="modal-input" id="deadlineDateInput"/>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="modal-save" onclick="saveDeadline()">Save Reminder</button>
+      <button class="modal-close" onclick="closeSetDeadline()">Cancel</button>
     </div>
   </div>
 </div>
 
 <script>
-  let allOwned = [], allShared = [];
+/* ═══════════════════════════════════════════
+   dashboard.js — DocuForge (inline, unified)
+═══════════════════════════════════════════ */
 
-  async function init() {
-    const me = await fetch('/api/auth/me').then(r => r.json());
-    if (me.error) { window.location.href = '/login'; return; }
-    document.getElementById('userName').textContent = me.name;
-    loadDocs();
-  }
+const PALETTE = [
+  '#f87c7c','#f4a547','#f9d057','#a8d97f',
+  '#4ecba0','#5bc4d4','#7b8cde','#b07cde',
+  '#e07bbd','#f4778a','#ff9a7b','#c3b1e1',
+  '#ffd6a5','#caffbf','#9bf6ff','#ffc6ff',
+  '#1a1814','#6b6760','#bdb5aa','#e8e4de',
+  '#d4a373','#a2d2ff','#bde0fe','#ffafcc',
+];
 
-  async function loadDocs() {
-    const data = await fetch('/api/documents').then(r => r.json());
-    // CORRECT — match what DocumentController actually returns
-allOwned = data.myDocuments || [];
-allShared = data.sharedDocuments || [];
-    renderDocs(allOwned, allShared);
-  }
+let activeCardId = null;
+let isDragging = false;
+let dragStartX = 0;
+let carouselScrollStart = 0;
 
-  function renderDocs(owned, shared) {
-    renderGrid('ownedGrid', owned, false);
-    renderGrid('sharedGrid', shared, true);
-  }
+// ── Local state ──────────────────────────────
+// starred: Set of doc IDs that the user has starred (persisted in localStorage)
+// binned:  Array of {id, title, deletedAt} stored in localStorage
+const STARRED_KEY = 'docuforge_starred';
+const BIN_KEY     = 'docuforge_bin';
 
-  function renderGrid(id, docs, isShared) {
-    const grid = document.getElementById(id);
-    if (!docs.length) {
-      grid.innerHTML = `<div class="empty"><div class="empty-icon">${isShared ? '👥' : '📄'}</div><p>${isShared ? 'No shared documents yet.' : 'No documents yet. Create your first one!'}</p></div>`;
+function getStarred() {
+  try { return new Set(JSON.parse(localStorage.getItem(STARRED_KEY) || '[]')); } catch { return new Set(); }
+}
+function saveStarred(s) { localStorage.setItem(STARRED_KEY, JSON.stringify([...s])); }
+function getBinned() {
+  try { return JSON.parse(localStorage.getItem(BIN_KEY) || '[]'); } catch { return []; }
+}
+function saveBinned(b) { localStorage.setItem(BIN_KEY, JSON.stringify(b)); }
+
+// ── INIT ──────────────────────────────────────
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadUser();
+  await loadDocuments();
+  buildCalendar();
+  animateProgress();
+  initCarouselDrag();
+  loadMyTasks();
+  loadAssignedByMe();
+  loadNotifications();
+  loadFriends();
+  sendHeartbeat();
+  // Poll for new notifications every 30 seconds
+  setInterval(loadNotifications, 30000);
+  // Refresh friends online status every 60 seconds
+  setInterval(() => { loadFriends(); sendHeartbeat(); }, 60000);
+});
+
+// ── VIEW SWITCHING ────────────────────────────
+function showView(view) {
+  document.getElementById('homeView').style.display      = view === 'home'       ? '' : 'none';
+  document.getElementById('favouritesView').style.display = view === 'favourites' ? '' : 'none';
+  document.getElementById('binView').style.display       = view === 'bin'        ? '' : 'none';
+
+  // update sidebar active state
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (view === 'home')        document.querySelector('a[href="/dashboard"]').classList.add('active');
+  if (view === 'favourites')  document.getElementById('favouritesNav').classList.add('active');
+  if (view === 'bin')         document.getElementById('binNav').classList.add('active');
+
+  if (view === 'favourites')  renderStarredView();
+  if (view === 'bin')         renderBinView();
+}
+
+// ── LOAD USER ─────────────────────────────────
+async function loadUser() {
+  try {
+    const res = await fetch('/api/auth/me');
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    const data = await res.json();
+    const nameEl = document.getElementById('greetingName');
+    if (nameEl) nameEl.textContent = data.name;
+    const profileName   = document.getElementById('profileName');
+    const profileAvatar = document.getElementById('profileAvatar');
+    if (profileName)   profileName.textContent = data.name;
+    if (profileAvatar) {
+      profileAvatar.textContent = data.name
+        .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+    }
+  } catch (err) { console.error('loadUser failed:', err); }
+}
+
+// ── LOAD FRIENDS ─────────────────────────────────────────────────────────
+const FRIEND_COLORS = ['#f87c7c','#f4a547','#4ecba0','#7b8cde','#e07bbd','#5bc4d4','#b07cde','#a8d97f'];
+
+async function loadFriends() {
+  const row = document.getElementById('friendsRow');
+  if (!row) return;
+  try {
+    const friends = await fetch('/api/friends').then(r => r.json());
+    if (!Array.isArray(friends) || friends.length === 0) {
+      row.innerHTML = '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">No friends yet. Share a document to connect with others.</div>';
       return;
     }
-    grid.innerHTML = docs.map(d => `
-      <div class="doc-card" onclick="openDoc(${d.id})">
-        <div class="doc-thumb">
-          ${isShared ? '<span class="shared-badge">Shared</span>' : ''}
-          <div class="doc-thumb-lines">
-            <div class="thumb-line"></div><div class="thumb-line"></div>
-            <div class="thumb-line"></div><div class="thumb-line"></div>
-          </div>
-          ${!isShared ? `<div class="doc-menu"><button onclick="event.stopPropagation();deleteDoc(${d.id})" title="Delete">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h8M5 3V2h2v1M4 3v6h4V3"/></svg>
-          </button></div>` : ''}
+    row.innerHTML = friends.map((f, i) => {
+      const initials = f.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      const color = FRIEND_COLORS[i % FRIEND_COLORS.length];
+      const statusText = f.online ? 'Online' : formatLastSeen(f.lastSeenSeconds);
+      const statusClass = f.online ? 'online' : '';
+      const onlineClass = f.online ? 'is-online' : '';
+      return `<div class="friend-chip">
+        <div class="friend-avatar ${onlineClass}" style="background:${color}">${initials}</div>
+        <div class="friend-info">
+          <span class="friend-name">${esc(f.name)}</span>
+          <span class="friend-status ${statusClass}">${statusText}</span>
         </div>
-        <div class="doc-info">
-          <div class="doc-name">${d.title}</div>
-          <div class="doc-meta">${isShared ? 'by ' + d.ownerName + ' · ' : ''}${timeAgo(d.updatedAt)}</div>
-        </div>
-      </div>
-    `).join('');
+      </div>`;
+    }).join('');
+  } catch(e) {
+    row.innerHTML = '<div style="font-size:12px;color:var(--text-muted)">Could not load friends.</div>';
+  }
+}
+
+function formatLastSeen(secs) {
+  if (secs == null) return 'Never seen';
+  if (secs < 60)   return 'Just now';
+  if (secs < 3600) return Math.floor(secs/60) + 'm ago';
+  if (secs < 86400) return Math.floor(secs/3600) + 'h ago';
+  return Math.floor(secs/86400) + 'd ago';
+}
+
+async function sendHeartbeat() {
+  await fetch('/api/friends/heartbeat', { method: 'POST' }).catch(() => {});
+}
+
+// ── LOAD DOCUMENTS ────────────────────────────
+async function loadDocuments() {
+  try {
+    const res = await fetch('/api/documents');
+    if (res.status === 401) { window.location.href = '/login'; return; }
+    const data = await res.json();
+    // API returns myDocuments / sharedDocuments
+    renderOwnedDocs(data.myDocuments || []);
+    renderSharedDocs(data.sharedDocuments || []);
+  } catch (err) { console.error('loadDocuments failed:', err); }
+}
+
+// ── RENDER OWNED DOCS ─────────────────────────
+function renderOwnedDocs(docs) {
+  const carousel = document.getElementById('docsCarousel');
+  if (!carousel) return;
+  carousel.querySelectorAll('.demo-card,.real-card').forEach(c => c.remove());
+
+  if (docs.length === 0) {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'min-width:200px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text-muted);padding:20px;';
+    empty.textContent = 'No documents yet. Click + New Page to start.';
+    carousel.appendChild(empty);
+    return;
   }
 
-  function filterDocs() {
-    const q = document.getElementById('searchInput').value.toLowerCase();
-    renderDocs(
-      allOwned.filter(d => d.title.toLowerCase().includes(q)),
-      allShared.filter(d => d.title.toLowerCase().includes(q))
-    );
+  const frag = document.createDocumentFragment();
+  docs.forEach((doc, i) => frag.appendChild(buildDocCard(doc, i)));
+  carousel.prepend(frag);
+}
+
+function buildDocCard(doc, i) {
+  const card = document.createElement('div');
+  card.className = 'doc-card real-card';
+  card.dataset.id    = doc.id;
+  card.dataset.title = doc.title;
+  card.style.setProperty('--card-color', doc.color || '#f87c7c');
+  card.style.animationDelay = (0.1 + i * 0.05) + 's';
+
+  const starred = getStarred();
+  const isStarred = starred.has(String(doc.id));
+
+  card.innerHTML = `
+    <div class="shine"></div>
+    <span class="doc-name">${esc(doc.title)}</span>
+    <div class="doc-card-actions">
+      <span style="display:flex;gap:4px">
+        <button class="card-action-btn${isStarred?' starred':''}" onclick="toggleStar(event,'${doc.id}','${esc(doc.title)}',this)" title="${isStarred?'Unstar':'Star'}">
+          <svg viewBox="0 0 24 24" fill="${isStarred?'#f4a547':'none'}" stroke="${isStarred?'#f4a547':'currentColor'}" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </button>
+        <button class="card-action-btn" onclick="openColorPicker('${doc.id}')" title="Change color">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"/></svg>
+        </button>
+      </span>
+      <a href="/editor/${doc.id}" class="card-open-btn">Open →</a>
+    </div>`;
+
+  card.addEventListener('contextmenu', e => { e.preventDefault(); showCardMenu(e, doc); });
+  return card;
+}
+
+// ── STARRED ───────────────────────────────────
+function toggleStar(event, docId, docTitle, btn) {
+  event.preventDefault();
+  event.stopPropagation();
+  const starred = getStarred();
+  const id = String(docId);
+  if (starred.has(id)) {
+    starred.delete(id);
+    btn.classList.remove('starred');
+    const svg = btn.querySelector('svg');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+  } else {
+    starred.add(id);
+    btn.classList.add('starred');
+    const svg = btn.querySelector('svg');
+    svg.setAttribute('fill', '#f4a547');
+    svg.setAttribute('stroke', '#f4a547');
   }
+  saveStarred(starred);
+}
 
-  function openDoc(id) { window.location.href = '/editor/' + id; }
+function renderStarredView() {
+  const starred = getStarred();
+  const container = document.getElementById('starredCarousel');
+  const emptyMsg  = document.getElementById('starredEmpty');
+  container.querySelectorAll('.real-card').forEach(c => c.remove());
 
-  async function createDoc() {
-    const title = document.getElementById('newTitle').value.trim() || 'Untitled document';
-    const res = await fetch('/api/documents', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title })
-    });
-    const doc = await res.json();
-    closeNewModal();
-    window.location.href = '/editor/' + doc.id;
-  }
-
-  async function deleteDoc(id) {
-    if (!confirm('Delete this document? This cannot be undone.')) return;
-    await fetch('/api/documents/' + id, { method: 'DELETE' });
-    loadDocs();
-  }
-
-  async function logout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    window.location.href = '/login';
-  }
-
-  function openNewModal() {
-    document.getElementById('newModal').classList.add('open');
-    setTimeout(() => document.getElementById('newTitle').focus(), 100);
-  }
-  function closeNewModal() { document.getElementById('newModal').classList.remove('open'); }
-
-  function timeAgo(ts) {
-    if (!ts) return '';
-    const diff = (Date.now() - new Date(ts)) / 1000;
-    if (diff < 60) return 'just now';
-    if (diff < 3600) return Math.floor(diff/60) + 'm ago';
-    if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
-    return Math.floor(diff/86400) + 'd ago';
-  }
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && document.getElementById('newModal').classList.contains('open')) createDoc();
+  const allCards = document.querySelectorAll('#docsCarousel .real-card');
+  const matchingDocs = [];
+  allCards.forEach(c => {
+    if (starred.has(String(c.dataset.id))) {
+      matchingDocs.push({ id: c.dataset.id, title: c.dataset.title, color: c.style.getPropertyValue('--card-color') });
+    }
   });
 
-  init();
+  if (matchingDocs.length === 0) {
+    emptyMsg.style.display = '';
+  } else {
+    emptyMsg.style.display = 'none';
+    matchingDocs.forEach((doc, i) => {
+      const card = buildDocCard(doc, i);
+      container.appendChild(card);
+    });
+  }
+}
+
+// ── BIN ────────────────────────────────────────
+function renderBinView() {
+  const binned = getBinned();
+  const list   = document.getElementById('binList');
+  const emptyMsg = document.getElementById('binEmpty');
+  list.querySelectorAll('.bin-item').forEach(c => c.remove());
+
+  if (binned.length === 0) {
+    emptyMsg.style.display = '';
+  } else {
+    emptyMsg.style.display = 'none';
+    binned.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'bin-item';
+      row.dataset.id = item.id;
+      const deletedDate = new Date(item.deletedAt).toLocaleDateString();
+      row.innerHTML = `
+        <span class="bin-item-name">${esc(item.title)}</span>
+        <span class="bin-item-date">Deleted ${deletedDate}</span>
+        <button class="bin-action-btn restore" onclick="restoreFromBin('${item.id}')">Restore</button>
+        <button class="bin-action-btn perm-del" onclick="permanentDelete('${item.id}')">Delete forever</button>`;
+      list.appendChild(row);
+    });
+  }
+}
+
+async function moveDocToBin(docId, docTitle) {
+  // Add to local bin first
+  const binned = getBinned();
+  if (!binned.find(b => String(b.id) === String(docId))) {
+    binned.push({ id: String(docId), title: docTitle, deletedAt: new Date().toISOString() });
+    saveBinned(binned);
+  }
+  // Remove from starred if starred
+  const starred = getStarred();
+  starred.delete(String(docId));
+  saveStarred(starred);
+  // Delete on backend
+  await fetch(`/api/documents/${docId}`, { method: 'DELETE' });
+  document.querySelector(`[data-id="${docId}"]`)?.remove();
+}
+
+async function restoreFromBin(docId) {
+  // Re-create the document on backend
+  const binned = getBinned();
+  const item = binned.find(b => String(b.id) === String(docId));
+  if (!item) return;
+  try {
+    const res = await fetch('/api/documents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: item.title })
+    });
+    const data = await res.json();
+    if (data.id) {
+      // Remove from bin
+      const newBin = getBinned().filter(b => String(b.id) !== String(docId));
+      saveBinned(newBin);
+      renderBinView();
+      await loadDocuments();
+      alert(`"${item.title}" restored. Note: content will be empty — version history is on the server.`);
+    }
+  } catch (err) { console.error(err); }
+}
+
+async function permanentDelete(docId) {
+  if (!confirm('Permanently delete this document? This cannot be undone.')) return;
+  const newBin = getBinned().filter(b => String(b.id) !== String(docId));
+  saveBinned(newBin);
+  renderBinView();
+}
+
+// ── RENDER SHARED DOCS ────────────────────────
+function renderSharedDocs(docs) {
+  const row = document.getElementById('sharedDocsRow');
+  if (!row) return;
+  row.querySelectorAll('.shared-card:not(.new-shared-card)').forEach(c => c.remove());
+  if (!docs.length) return;
+
+  const anchor = row.querySelector('.new-shared-card');
+  docs.forEach(doc => {
+    const card = document.createElement('div');
+    card.className = 'shared-card';
+    card.onclick = () => window.location.href = `/editor/${doc.id}`;
+    card.innerHTML = `
+      <div class="shared-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <span class="shared-name">${esc(doc.title)}</span>
+      <span class="shared-by">by ${esc(doc.ownerName || '')}</span>
+      <span class="role-badge ${doc.permissionType==='EDIT'?'rb-editor':'rb-viewer'}">${doc.permissionType==='EDIT'?'Editor':'Viewer'}</span>`;
+    anchor ? row.insertBefore(card, anchor) : row.appendChild(card);
+  });
+}
+
+// ── NEW PAGE ──────────────────────────────────
+async function createNewDocument() {
+  try {
+    const res = await fetch('/api/documents', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: 'Untitled' })
+    });
+    const data = await res.json();
+    if (data.id) window.location.href = `/editor/${data.id}`;
+    else alert(data.error || 'Failed to create document');
+  } catch (err) { console.error(err); }
+}
+
+// ── CALENDAR ──────────────────────────────────
+function buildCalendar() {
+  const strip = document.getElementById('calendarStrip');
+  if (!strip) return;
+  const days = ['Mon','Tue','Wed','Thu','Fri'];
+  const today = new Date();
+  const offset = today.getDay() === 0 ? -6 : 1 - today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + offset);
+
+  days.forEach((label, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    const el = document.createElement('div');
+    el.className = 'cal-day' + (d.toDateString() === today.toDateString() ? ' active' : '');
+    el.innerHTML = `<span class="cal-label">${label}</span><span class="cal-num">${d.getDate()}</span>`;
+    el.onclick = () => {
+      document.querySelectorAll('.cal-day').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    };
+    strip.appendChild(el);
+  });
+}
+
+function animateProgress() {
+  setTimeout(() => {
+    const f = document.getElementById('progressFill');
+    if (f) f.style.width = '35%';
+  }, 700);
+}
+
+// ── CAROUSEL ──────────────────────────────────
+function initCarouselDrag() {
+  const c = document.getElementById('docsCarousel');
+  if (!c) return;
+  c.addEventListener('mousedown', e => { isDragging=true; dragStartX=e.pageX; carouselScrollStart=c.scrollLeft; c.style.userSelect='none'; });
+  document.addEventListener('mousemove', e => { if(isDragging) c.scrollLeft = carouselScrollStart-(e.pageX-dragStartX); });
+  document.addEventListener('mouseup', () => { isDragging=false; const c=document.getElementById('docsCarousel'); if(c) c.style.userSelect=''; });
+  c.addEventListener('touchstart', e => { dragStartX=e.touches[0].pageX; carouselScrollStart=c.scrollLeft; }, {passive:true});
+  c.addEventListener('touchmove', e => { c.scrollLeft=carouselScrollStart-(e.touches[0].pageX-dragStartX); }, {passive:true});
+}
+
+function scrollCarousel(dir) {
+  const c = document.getElementById('docsCarousel');
+  if (c) c.scrollBy({ left: dir * 360, behavior: 'smooth' });
+}
+
+function toggleExpandDocs(btn) {
+  const c = document.getElementById('docsCarousel');
+  if (!c) return;
+  const ex = c.classList.toggle('expanded');
+  c.style.flexWrap = ex ? 'wrap' : '';
+  c.style.overflowX = ex ? 'hidden' : 'auto';
+  btn.textContent = ex ? 'Collapse' : 'Expand all';
+}
+
+// ── COLOR PICKER ──────────────────────────────
+function openColorPicker(cardId) {
+  activeCardId = cardId;
+  const modal = document.getElementById('colorModal');
+  const palette = document.getElementById('colorPalette');
+  palette.innerHTML = '';
+  const card = document.querySelector(`[data-id="${cardId}"]`);
+  const current = card ? card.style.getPropertyValue('--card-color').trim() : '';
+
+  PALETTE.forEach((color, i) => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch' + (color === current ? ' selected' : '');
+    sw.style.background = color;
+    sw.style.animationDelay = (i * 0.02) + 's';
+    sw.onclick = () => {
+      document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+      sw.classList.add('selected');
+      applyColor(color);
+    };
+    palette.appendChild(sw);
+  });
+  modal.classList.add('open');
+}
+
+function applyCustomColor(c) { applyColor(c); }
+
+function applyColor(color) {
+  if (!activeCardId) return;
+  const card = document.querySelector(`[data-id="${activeCardId}"]`);
+  if (card) card.style.setProperty('--card-color', color);
+  fetch(`/api/documents/${activeCardId}/color`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ color })
+  }).catch(console.error);
+}
+
+function closeColorPicker(event) {
+  if (event && event.target !== document.getElementById('colorModal')) return;
+  document.getElementById('colorModal').classList.remove('open');
+  activeCardId = null;
+}
+
+// ── CONTEXT MENU ──────────────────────────────
+function showCardMenu(e, doc) {
+  document.getElementById('cardContextMenu')?.remove();
+  const menu = document.createElement('div');
+  menu.id = 'cardContextMenu';
+  menu.style.cssText = `position:fixed;top:${e.clientY}px;left:${e.clientX}px;background:var(--surface-solid);border:0.5px solid var(--border2);border-radius:10px;padding:6px;z-index:200;box-shadow:var(--shadow-md);min-width:150px;`;
+  menu.innerHTML = `
+    <div class="ctx-item" onclick="renameDoc(${doc.id},'${esc(doc.title)}')">✏️ Rename</div>
+    <div class="ctx-item" onclick="openColorPicker(${doc.id})">🎨 Change color</div>
+    <div class="ctx-item" onclick="starFromMenu(${doc.id},'${esc(doc.title)}')">⭐ Toggle star</div>
+    <div class="ctx-item ctx-danger" onclick="moveDocToBin(${doc.id},'${esc(doc.title)}')">🗑️ Move to Bin</div>`;
+  menu.querySelectorAll('.ctx-item').forEach(item => {
+    item.style.cssText = 'padding:8px 12px;border-radius:6px;font-size:12px;cursor:pointer;';
+    item.onmouseover = () => item.style.background = 'var(--bg2)';
+    item.onmouseout = () => item.style.background = '';
+  });
+  const danger = menu.querySelector('.ctx-danger');
+  if (danger) danger.style.color = '#e24b4a';
+  document.body.appendChild(menu);
+  setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 10);
+}
+
+function starFromMenu(docId, docTitle) {
+  const starBtn = document.querySelector(`[data-id="${docId}"] .card-action-btn`);
+  if (starBtn) toggleStar({ preventDefault:()=>{}, stopPropagation:()=>{} }, docId, docTitle, starBtn);
+}
+
+async function renameDoc(docId, currentTitle) {
+  const t = prompt('Rename document:', currentTitle);
+  if (!t || t === currentTitle) return;
+  await fetch(`/api/documents/${docId}/title`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: t })
+  });
+  const el = document.querySelector(`[data-id="${docId}"] .doc-name`);
+  if (el) { el.textContent = t; document.querySelector(`[data-id="${docId}"]`).dataset.title = t; }
+}
+
+// ── DEADLINE ──────────────────────────────────
+async function loadDeadlineDocs() {
+  const res = await fetch('/api/documents');
+  const data = await res.json();
+  const docs = data.myDocuments || [];
+  const select = document.getElementById('deadlineDocSelect');
+  select.innerHTML = '';
+  docs.forEach(doc => {
+    const option = document.createElement('option');
+    option.value = doc.id;
+    option.textContent = doc.title;
+    select.appendChild(option);
+  });
+}
+
+function openSetDeadline() {
+  const modal = document.getElementById('deadlineModal');
+  const input = document.getElementById('deadlineDateInput');
+  const d = new Date();
+  d.setDate(d.getDate()+1);
+  d.setHours(23,59,0,0);
+  input.value = d.toISOString().slice(0,16);
+  loadDeadlineDocs();
+  modal.classList.add('open');
+}
+
+function closeSetDeadline(event) {
+  if (event && event.target !== document.getElementById('deadlineModal')) return;
+  document.getElementById('deadlineModal').classList.remove('open');
+}
+
+async function saveDeadline() {
+  const docId    = document.getElementById('deadlineDocSelect').value;
+  const datetime = document.getElementById('deadlineDateInput').value;
+  if (!docId || !datetime) { alert('Select document and date'); return; }
+  try {
+    const res = await fetch(`/api/documents/${docId}/deadline`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deadline: datetime })
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'Failed to set deadline'); return; }
+    const d    = new Date(datetime);
+    const days = Math.ceil((d - new Date()) / 86400000);
+    const selText = document.getElementById('deadlineDocSelect').selectedOptions[0].text;
+    document.getElementById('deadlineDocName').textContent = selText;
+    document.getElementById('deadlineDateDisplay').textContent = `${d.toDateString().slice(0,10)}, ${days} days left`;
+    document.getElementById('deadlineTag').textContent = 'Project';
+    alert('✅ Deadline set!');
+    closeSetDeadline();
+  } catch (err) { console.error(err); alert('Error setting deadline'); }
+}
+
+function toggleDeadlines(btn) {
+  btn.textContent = btn.textContent.includes('→') ? 'Collapse ↑' : 'Expand (3) →';
+}
+
+// ── LOGOUT ────────────────────────────────────
+async function logout() {
+  await fetch('/api/auth/logout', { method: 'POST' });
+  window.location.href = '/login';
+}
+
+// ── UTILS ─────────────────────────────────────
+
+// ── LOAD MY TASKS ─────────────────────────────────────────────────────────
+let allMyTasks = [];
+let tasksExpanded = false;
+
+async function loadMyTasks() {
+  const container = document.getElementById('myTasksList');
+  if (!container) return;
+  try {
+    const tasks = await fetch('/api/tasks/my').then(r => r.json());
+    allMyTasks = Array.isArray(tasks) ? tasks : [];
+    renderMyTasks();
+  } catch(e) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:12px 0">Could not load tasks.</div>';
+  }
+}
+
+function renderMyTasks() {
+  const container = document.getElementById('myTasksList');
+  if (!container) return;
+
+  if (!allMyTasks.length) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:12px 0">No tasks assigned to you.</div>';
+    return;
+  }
+
+  // Group by document
+  const groups = {};
+  allMyTasks.forEach(t => {
+    const key = t.documentId;
+    if (!groups[key]) groups[key] = { id: t.documentId, title: t.documentTitle || 'Document', tasks: [] };
+    groups[key].tasks.push(t);
+  });
+
+  const docList = Object.values(groups);
+  const visibleDocs = tasksExpanded ? docList : docList.slice(0, 2);
+
+  container.innerHTML = '';
+
+  const DOC_GRADIENTS = [
+    'linear-gradient(135deg,#667eea,#764ba2)',
+    'linear-gradient(135deg,#f093fb,#f5576c)',
+    'linear-gradient(135deg,#4facfe,#00f2fe)',
+    'linear-gradient(135deg,#43e97b,#38f9d7)',
+    'linear-gradient(135deg,#fa709a,#fee140)',
+    'linear-gradient(135deg,#a18cd1,#fbc2eb)',
+    'linear-gradient(135deg,#fccb90,#d57eeb)',
+    'linear-gradient(135deg,#84fab0,#8fd3f4)',
+  ];
+
+  visibleDocs.forEach((group, idx) => {
+    const groupEl = document.createElement('div');
+    groupEl.className = 'mytasks-doc-group';
+    const grad = DOC_GRADIENTS[idx % DOC_GRADIENTS.length];
+
+    groupEl.innerHTML = `
+      <div class="mytasks-doc-header" style="background:${grad}">
+        <span class="mytasks-doc-name" title="${esc(group.title)}">${esc(group.title)}</span>
+        <a class="mytasks-open-btn" href="/editor/${group.id}">Open →</a>
+      </div>
+      <div class="mytasks-slider-wrap">
+        <div class="mytasks-slider" id="slider-${group.id}">
+          ${group.tasks.map(t => buildTaskCard(t)).join('')}
+        </div>
+        ${group.tasks.length > 1 ? `<button class="mytasks-slide-btn" onclick="slideGroup(${group.id},1)">›</button>` : ''}
+      </div>`;
+
+    container.appendChild(groupEl);
+  });
+
+  // Expand / collapse button
+  if (docList.length > 2) {
+    const btn = document.createElement('button');
+    btn.className = 'mytasks-expand-btn';
+    btn.textContent = tasksExpanded ? '▲ Collapse' : `▼ Expand all (${docList.length} docs)`;
+    btn.onclick = () => { tasksExpanded = !tasksExpanded; renderMyTasks(); };
+    container.appendChild(btn);
+  }
+}
+
+function buildTaskCard(t) {
+  const done = t.status === 'COMPLETED';
+  const due  = t.dueDate ? new Date(t.dueDate) : null;
+  const overdue = due && due < new Date() && !done;
+  const dueStr = due
+    ? due.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})
+    : 'No deadline';
+
+  return `<div class="tw-card">
+    <div class="tw-card-top">
+      <div class="tw-check ${done?'done':''}" onclick="dashToggleTask(${t.id},'${done?'PENDING':'COMPLETED'}')" title="${done?'Mark pending':'Mark done'}">${done?'✓':''}</div>
+      <div class="tw-card-title ${done?'done':''}">${esc(t.title)}</div>
+    </div>
+    <div class="tw-card-due ${overdue?'overdue':''}">${overdue?'⚠ ':''}${dueStr}</div>
+    <div class="tw-card-footer">
+      <span class="tw-card-status ${done?'done':'pending'}">${done?'✓ Done':'● Pending'}</span>
+    </div>
+  </div>`;
+}
+
+function slideGroup(docId, dir) {
+  const slider = document.getElementById('slider-' + docId);
+  if (slider) slider.scrollBy({ left: dir * 150, behavior: 'smooth' });
+}
+
+async function dashToggleTask(taskId, newStatus) {
+  await fetch('/api/tasks/' + taskId + '/status', {
+    method: 'PATCH', headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ status: newStatus })
+  }).catch(console.error);
+  loadMyTasks();
+  loadAssignedByMe(); // reflect status change for the assigner too
+}
+
+// ── TASKS ASSIGNED BY ME ──────────────────────────────────────────────────
+let abmExpanded = false;
+
+async function loadAssignedByMe() {
+  const container = document.getElementById('assignedByMeList');
+  if (!container) return;
+  try {
+    const res = await fetch('/api/tasks/created-by-me');
+    const tasks = await res.json();
+    if (!Array.isArray(tasks)) {
+      container.innerHTML = `<div style="font-size:12px;color:#e24b4a;padding:16px 0">Error: ${esc(String(tasks.error || JSON.stringify(tasks)))}</div>`;
+      return;
+    }
+    if (tasks.length === 0) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:16px 0">No tasks assigned yet.</div>';
+      return;
+    }
+
+    const groups = {};
+    tasks.forEach(t => {
+      if (!groups[t.documentId]) groups[t.documentId] = { id: t.documentId, title: t.documentTitle || 'Document', tasks: [] };
+      groups[t.documentId].tasks.push(t);
+    });
+
+    const docList = Object.values(groups);
+    const visible = abmExpanded ? docList : docList.slice(0, 3);
+    const ABM_COLORS = ['#f87c7c','#f4a547','#4ecba0','#7b8cde','#e07bbd','#5bc4d4'];
+    const ABM_GRADIENTS = [
+      'linear-gradient(135deg,#f093fb,#f5576c)',
+      'linear-gradient(135deg,#4facfe,#00f2fe)',
+      'linear-gradient(135deg,#43e97b,#38f9d7)',
+      'linear-gradient(135deg,#667eea,#764ba2)',
+      'linear-gradient(135deg,#fa709a,#fee140)',
+      'linear-gradient(135deg,#a18cd1,#fbc2eb)',
+    ];
+
+    container.innerHTML = '';
+
+    visible.forEach((group, idx) => {
+      const groupEl = document.createElement('div');
+      groupEl.className = 'abm-doc-group';
+      const grad = ABM_GRADIENTS[idx % ABM_GRADIENTS.length];
+
+      const tasksHtml = group.tasks.map(t => {
+        const done = t.status === 'COMPLETED';
+        const due = t.dueDate ? new Date(t.dueDate) : null;
+        const overdue = due && due < new Date() && !done;
+        const dueStr = due ? due.toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : 'No deadline';
+        const assignees = (t.assignees || []);
+        const count = assignees.length;
+
+        const assigneeRows = count > 0
+          ? assignees.map((a, i) => `
+              <div class="abm-assignee-row">
+                <div class="abm-avatar" style="background:${ABM_COLORS[i%ABM_COLORS.length]}">${(a.name||a.email)[0].toUpperCase()}</div>
+                <span class="abm-assignee-name">${esc(a.name || a.email)}</span>
+                <span class="abm-assignee-due ${overdue?'overdue':''}">${dueStr}</span>
+                <span class="abm-status-dot ${done?'done':'pending'}"></span>
+              </div>`).join('')
+          : `<div class="abm-no-assignees">No assignees yet</div>`;
+
+        return `<div class="abm-task-card">
+          <div class="abm-task-header">
+            <div class="abm-task-title ${done?'done':''}">${esc(t.title)}</div>
+            <span class="abm-task-status ${done?'done':'pending'}">${done?'✓ Done':'● Pending'}</span>
+          </div>
+          <div class="abm-assignees">${assigneeRows}</div>
+          <div class="abm-footer">
+            <span class="abm-count">${count} assignee${count!==1?'s':''}</span>
+          </div>
+        </div>`;
+      }).join('');
+
+      groupEl.innerHTML = `
+        <div class="abm-doc-header" style="background:${grad}">
+          <span class="abm-doc-name" title="${esc(group.title)}">${esc(group.title)}</span>
+          <a class="abm-open-btn" href="/editor/${group.id}">Open →</a>
+        </div>
+        ${tasksHtml}`;
+
+      container.appendChild(groupEl);
+    });
+
+    if (docList.length > 3) {
+      const btn = document.createElement('button');
+      btn.className = 'mytasks-expand-btn';
+      btn.style.borderRadius = '0 0 14px 14px';
+      btn.textContent = abmExpanded ? '▲ Collapse' : `▼ Show all (${docList.length} docs)`;
+      btn.onclick = () => { abmExpanded = !abmExpanded; loadAssignedByMe(); };
+      container.appendChild(btn);
+    }
+  } catch(e) {
+    container.innerHTML = `<div style="font-size:12px;color:#e24b4a;padding:16px 0;text-align:center">Error: ${e.message}</div>`;
+  }
+}
+
+// ── SEARCH ────────────────────────────────────────────────────────────────
+let searchIndex = -1;
+let searchData = { docs: [], tasks: [] };
+
+function openSearch() {
+  document.getElementById('searchOverlay').classList.add('open');
+  document.getElementById('searchInput').focus();
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchResults').innerHTML = '<div class="search-empty">Start typing to search…</div>';
+  searchIndex = -1;
+  // Pre-load data
+  buildSearchIndex();
+}
+
+function closeSearch() {
+  document.getElementById('searchOverlay').classList.remove('open');
+  searchIndex = -1;
+}
+
+async function buildSearchIndex() {
+  try {
+    const res = await fetch('/api/documents').then(r => r.json());
+    searchData.docs = [
+      ...(res.myDocuments || []).map(d => ({...d, _type:'doc', _owned:true})),
+      ...(res.sharedDocuments || []).map(d => ({...d, _type:'doc', _owned:false}))
+    ];
+    const tasks = await fetch('/api/tasks/my').then(r => r.json()).catch(() => []);
+    const created = await fetch('/api/tasks/created-by-me').then(r => r.json()).catch(() => []);
+    const taskMap = {};
+    [...(Array.isArray(tasks)?tasks:[]), ...(Array.isArray(created)?created:[])].forEach(t => { taskMap[t.id] = t; });
+    searchData.tasks = Object.values(taskMap);
+  } catch(e) {}
+}
+
+function onSearchInput() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  searchIndex = -1;
+  if (!q) {
+    document.getElementById('searchResults').innerHTML = '<div class="search-empty">Start typing to search…</div>';
+    return;
+  }
+  renderSearchResults(q);
+}
+
+function renderSearchResults(q) {
+  const matchDocs = searchData.docs.filter(d =>
+    d.title && d.title.toLowerCase().includes(q)
+  );
+  const matchTasks = searchData.tasks.filter(t =>
+    (t.title && t.title.toLowerCase().includes(q)) ||
+    (t.description && t.description.toLowerCase().includes(q)) ||
+    (t.documentTitle && t.documentTitle.toLowerCase().includes(q))
+  );
+
+  if (!matchDocs.length && !matchTasks.length) {
+    document.getElementById('searchResults').innerHTML = `<div class="search-empty">No results for "<strong>${esc(q)}</strong>"</div>`;
+    return;
+  }
+
+  let html = '';
+
+  if (matchDocs.length) {
+    html += `<div class="search-section-label">Documents</div>`;
+    html += matchDocs.slice(0,8).map(d => `
+      <a class="search-result-item" href="/editor/${d.id}" onclick="closeSearch()">
+        <div class="search-result-icon doc">📄</div>
+        <div class="search-result-body">
+          <div class="search-result-title">${highlight(d.title, q)}</div>
+          <div class="search-result-sub">${d._owned ? 'My document' : 'Shared by ' + esc(d.ownerName||'')}</div>
+        </div>
+      </a>`).join('');
+  }
+
+  if (matchTasks.length) {
+    html += `<div class="search-section-label">Tasks</div>`;
+    html += matchTasks.slice(0,6).map(t => `
+      <a class="search-result-item" href="/editor/${t.documentId}" onclick="closeSearch()">
+        <div class="search-result-icon task">✓</div>
+        <div class="search-result-body">
+          <div class="search-result-title">${highlight(t.title, q)}</div>
+          <div class="search-result-sub">in <mark>${esc(t.documentTitle||'')}</mark> · ${t.status}</div>
+        </div>
+      </a>`).join('');
+  }
+
+  document.getElementById('searchResults').innerHTML = html;
+}
+
+function highlight(text, q) {
+  if (!text) return '';
+  const idx = text.toLowerCase().indexOf(q);
+  if (idx === -1) return esc(text);
+  return esc(text.slice(0, idx)) + '<mark>' + esc(text.slice(idx, idx + q.length)) + '</mark>' + esc(text.slice(idx + q.length));
+}
+
+function onSearchKey(e) {
+  const items = document.querySelectorAll('.search-result-item');
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    searchIndex = Math.min(searchIndex + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('active', i === searchIndex));
+    if (items[searchIndex]) items[searchIndex].scrollIntoView({block:'nearest'});
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    searchIndex = Math.max(searchIndex - 1, 0);
+    items.forEach((el, i) => el.classList.toggle('active', i === searchIndex));
+    if (items[searchIndex]) items[searchIndex].scrollIntoView({block:'nearest'});
+  } else if (e.key === 'Enter') {
+    if (searchIndex >= 0 && items[searchIndex]) {
+      items[searchIndex].click();
+    }
+  } else if (e.key === 'Escape') {
+    closeSearch();
+  }
+}
+
+// Global keyboard shortcut: Ctrl+K or Cmd+K
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    openSearch();
+  }
+  if (e.key === 'Escape') {
+    closeSearch();
+    document.getElementById('colorModal')?.classList.remove('open');
+    document.getElementById('deadlineModal')?.classList.remove('open');
+    document.getElementById('cardContextMenu')?.remove();
+  }
+});
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── NOTIFICATIONS ─────────────────────────────────────────────────────────
+let notifPanelOpen = false;
+
+async function loadNotifications() {
+  try {
+    const [notifs, countRes] = await Promise.all([
+      fetch('/api/notifications').then(r => r.json()),
+      fetch('/api/notifications/unread-count').then(r => r.json())
+    ]);
+
+    // Update dot
+    const dot = document.getElementById('notifDot');
+    if (dot) dot.style.display = countRes.count > 0 ? 'block' : 'none';
+
+    // Render list
+    const list = document.getElementById('notifList');
+    if (!list) return;
+    if (!Array.isArray(notifs) || notifs.length === 0) {
+      list.innerHTML = '<div class="notif-empty">No notifications yet.</div>';
+      return;
+    }
+
+    list.innerHTML = notifs.map(n => {
+      const isAssigned = n.type === 'TASK_ASSIGNED';
+      const icon = isAssigned ? '📋' : '✅';
+      const iconClass = isAssigned ? 'assigned' : 'completed';
+      const timeStr = timeAgo(n.createdAt);
+      const docLink = n.documentId ? `onclick="window.location='/editor/${n.documentId}'"` : '';
+      return `<div class="notif-item ${n.read ? '' : 'unread'}" ${docLink}>
+        <div class="notif-icon ${iconClass}">${icon}</div>
+        <div class="notif-body">
+          <div class="notif-msg">${esc(n.message)}</div>
+          <div class="notif-time">${timeStr}</div>
+        </div>
+        ${!n.read ? '<div class="notif-unread-dot"></div>' : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.error('Failed to load notifications', e);
+  }
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById('notifPanel');
+  notifPanelOpen = !notifPanelOpen;
+  panel.classList.toggle('open', notifPanelOpen);
+  if (notifPanelOpen) loadNotifications();
+}
+
+async function markAllRead() {
+  await fetch('/api/notifications/mark-all-read', { method: 'POST' });
+  loadNotifications();
+}
+
+// Close panel when clicking outside
+document.addEventListener('click', e => {
+  const panel = document.getElementById('notifPanel');
+  const btn = document.getElementById('notifBtn');
+  if (notifPanelOpen && panel && !panel.contains(e.target) && !btn.contains(e.target)) {
+    notifPanelOpen = false;
+    panel.classList.remove('open');
+  }
+});
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff/60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff/3600) + 'h ago';
+  return Math.floor(diff/86400) + 'd ago';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  document.getElementById('colorModal')?.classList.remove('open');
+  document.getElementById('deadlineModal')?.classList.remove('open');
+  document.getElementById('cardContextMenu')?.remove();
+});
 </script>
 </body>
 </html>

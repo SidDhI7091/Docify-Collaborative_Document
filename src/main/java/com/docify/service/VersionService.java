@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Map;
 
 @Service @RequiredArgsConstructor
 public class VersionService {
@@ -18,20 +19,36 @@ public class VersionService {
     }
 
     @Transactional
-    public DocumentTab restoreVersion(Long versionId, Long userId) {
-        DocumentVersion version = versionRepository.findById(versionId)
+    public Map<String, Object> restoreVersion(Long versionId, Long userId) {
+        DocumentVersion version = versionRepository.findByIdWithTab(versionId)
             .orElseThrow(() -> new RuntimeException("Version not found"));
         DocumentTab tab = version.getTab();
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("User not found"));
-        // snapshot current before restoring
-        DocumentVersion snapshot = DocumentVersion.builder()
-            .document(tab.getDocument()).tab(tab)
-            .savedBy(user).content(tab.getContent())
-            .versionName("Before restore").build();
-        versionRepository.save(snapshot);
-        tab.setContent(version.getContent());
-        return tabRepository.save(tab);
+
+        // Snapshot current content before overwriting
+        String currentContent = tab.getContent();
+        if (currentContent != null && !currentContent.isBlank()) {
+            DocumentVersion snapshot = DocumentVersion.builder()
+                .document(tab.getDocument())
+                .tab(tab)
+                .savedBy(user)
+                .content(currentContent)
+                .versionName("Before restore")
+                .build();
+            versionRepository.save(snapshot);
+        }
+
+        // Restore the content
+        String restoredContent = version.getContent() != null ? version.getContent() : "";
+        tab.setContent(restoredContent);
+        tabRepository.save(tab);
+
+        // Return plain data — no JPA entities
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("id", tab.getId());
+        result.put("content", restoredContent);
+        return result;
     }
 
     @Transactional

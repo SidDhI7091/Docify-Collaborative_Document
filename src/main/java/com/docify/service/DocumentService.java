@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.Map;
 
 @Service @RequiredArgsConstructor
 public class DocumentService {
@@ -30,15 +31,29 @@ public class DocumentService {
     }
 
     public List<Document> getMyDocuments(Long ownerId) {
-        return documentRepository.findByOwnerId(ownerId);
+        return documentRepository.findByOwnerIdOrderByUpdatedAtDesc(ownerId);
     }
 
-    public List<Document> getSharedDocuments(Long userId) {
-        return documentRepository.findSharedWithUser(userId);
+    public List<Map<String, Object>> getSharedDocuments(Long userId) {
+        List<Object[]> results = documentRepository.findSharedWithUserAndPermission(userId);
+        return results.stream().map(row -> {
+            Document doc = (Document) row[0];
+            String permissionType = (String) row[1];
+            Map<String, Object> map = new java.util.LinkedHashMap<>();
+            map.put("id", doc.getId());
+            map.put("title", doc.getTitle());
+            map.put("ownerId", doc.getOwner().getId());
+            map.put("ownerName", doc.getOwner().getName());
+            map.put("color", doc.getColor());
+            map.put("createdAt", doc.getCreatedAt());
+            map.put("updatedAt", doc.getUpdatedAt());
+            map.put("permissionType", permissionType);
+            return map;
+        }).toList();
     }
 
     public Document getDocument(Long docId) {
-        return documentRepository.findById(docId)
+        return documentRepository.findByIdWithOwner(docId)
             .orElseThrow(() -> new RuntimeException("Document not found"));
     }
 
@@ -49,21 +64,25 @@ public class DocumentService {
         return documentRepository.save(doc);
     }
 
-    public boolean canAccess(Long documentId, Long userId) {
-        Document doc = documentRepository.findById(documentId)
-            .orElseThrow(() -> new RuntimeException("Not found"));
-        if (doc.getOwner().getId().equals(userId)) return true;
-        return permissionRepository.findByDocumentIdAndUserId(documentId, userId).isPresent();
+    @Transactional
+    public void updateColor(Long docId, String color) {
+        Document doc = getDocument(docId);
+        doc.setColor(color);
+        documentRepository.save(doc);
     }
 
     @Transactional
-    public Document renameDocument(Long documentId, Long userId, String name) {
-        Document doc = documentRepository.findById(documentId)
+    public void updateDeadline(Long docId, String deadline) {
+        Document doc = getDocument(docId);
+        doc.setDeadline(deadline);
+        documentRepository.save(doc);
+    }
+
+    public boolean canAccess(Long documentId, Long userId) {
+        Document doc = documentRepository.findByIdWithOwner(documentId)
             .orElseThrow(() -> new RuntimeException("Not found"));
-        if (!doc.getOwner().getId().equals(userId))
-            throw new RuntimeException("Unauthorized");
-        doc.setTitle(name);
-        return documentRepository.save(doc);
+        if (doc.getOwner().getId().equals(userId)) return true;
+        return permissionRepository.findByDocumentIdAndUserId(documentId, userId).isPresent();
     }
 
     @Transactional
